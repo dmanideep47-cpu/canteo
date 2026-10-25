@@ -1,0 +1,187 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-canvas: #FAF7F2;
+  --color-ink: #111111;
+  --color-ink-muted: #5E5E5E;
+  --color-ink-secondary: #6B6B6B;
+  --color-hairline: #E5E2DD;
+  --color-card: #FFFFFF;
+  --color-tint: #F4EFEA;
+  --color-accent: #D97706; /* Warm Orange / Amber sole accent */
+}
+
+:root {
+  --bg-page: #FAF7F2;
+  --text-primary: #111111;
+  --text-muted: #5E5E5E;
+  --text-secondary: #6B6B6B;
+  --border-hairline: #E5E2DD;
+  --bg-card: #FFFFFF;
+  --bg-tint: #F4EFEA;
+  --accent-canteen: #D97706;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: #FAF7F2;
+  color: #111111;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #FAF7F2;
+  color: #111111;
+  overflow-x: hidden;
+}
+
+/* Global Selection with warm amber accent */
+::selection {
+  background-color: #D97706;
+  color: #FFFFFF;
+}
+
+/* Tabular figures on all numbers */
+.tabular-nums,
+[data-tabular="true"],
+.font-mono,
+.font-mono-editorial {
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Editorial Typography */
+.font-display {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-feature-settings: "cv02" 1;
+}
+
+.font-body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+.font-mono-editorial {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+/* Focus Ring */
+:focus-visible {
+  outline: 2px solid #111111;
+  outline-offset: 2px;
+}
+
+/* Thin Quiet Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E5E2DD;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C8C4BD;
+}
+
+/* Scroll reveal transition */
+.reveal-fade-up {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-fade-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Editorial Lineup Card: 1px border, no box-shadow, rounded-xl (12px) */
+.card-editorial {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E2DD;
+  border-radius: 12px;
+  box-shadow: none !important;
+  transition: border-color 150ms ease;
+}
+
+.card-editorial:hover {
+  border-color: #111111;
+}
+
+/* Standardized 48px Black Pill Button */
+.btn-editorial-primary {
+  height: 48px;
+  min-height: 48px;
+  background-color: #111111;
+  color: #FFFFFF;
+  border-radius: 9999px;
+  font-family: "Inter", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: none !important;
+  transition: background-color 150ms ease, transform 100ms ease;
+}
+
+.btn-editorial-primary:hover {
+  background-color: #1A1A1A;
+}
+
+.btn-editorial-primary:active {
+  transform: scale(0.98);
+}
+
+/* Text link with warm amber hover underline */
+.link-editorial {
+  color: #111111;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 150ms ease;
+}
+
+.link-editorial:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: #D97706;
+  text-decoration-thickness: 1.5px;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal-fade-up {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
