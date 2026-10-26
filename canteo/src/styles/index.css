@@ -172,6 +172,48 @@ body {
   text-decoration-thickness: 1.5px;
 }
 
+/* Pure CSS Instrument Console & Conveyor Belt Styles */
+.conveyor-scanlines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.02) 2px,
+    rgba(255, 255, 255, 0.02) 4px
+  );
+}
+
+@keyframes number-scale-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.animate-number-pulse {
+  animation: number-scale-pulse 200ms ease-out;
+}
+
+@keyframes slot-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slot-in {
+  animation: slot-enter 300ms ease-out forwards;
+}
+
+/* Dark Console Focus Ring */
+.focus-amber:focus-visible {
+  outline: 2px solid #F59E0B !important;
+  outline-offset: 2px !important;
+}
+
 /* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
@@ -184,4 +226,9 @@ body {
     opacity: 1 !important;
     transform: none !important;
   }
+  .animate-number-pulse,
+  .animate-slot-in {
+    animation: none !important;
+  }
 }
+

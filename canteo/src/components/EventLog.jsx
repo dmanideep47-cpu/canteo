@@ -1,93 +1,120 @@
-import { useState } from 'react';
-import { Terminal } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 
-export default function EventLog({ events }) {
-  const [filter, setFilter] = useState('ALL');
+export default function EventLog({ events = [] }) {
+  const [clearedTimestamp, setClearedTimestamp] = useState(0);
+  const scrollRef = useRef(null);
 
-  const filteredEvents = events.filter((ev) => {
-    if (filter === 'ALL') return true;
-    if (filter === 'PRODUCER') return ev.type === 'producer';
-    if (filter === 'CONSUMER') return ev.type === 'consumer';
-    if (filter === 'MUTEX') return ev.type === 'mutex';
-    if (filter === 'BLOCKED') return ev.result === 'blocked' || ev.result === 'warning';
-    return true;
-  });
+  // Filter events newer than last clear action, cap at 50
+  const activeEvents = events
+    .filter((e) => !clearedTimestamp || (e.id > clearedTimestamp))
+    .slice(0, 50);
+
+  // Auto-scroll to top whenever a new event enters
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [events.length]);
+
+  const handleClear = () => {
+    if (events.length > 0) {
+      setClearedTimestamp(events[0]?.id || Date.now());
+    }
+  };
 
   return (
-    <div className="bg-[#0C0C0C] text-white rounded-xl border border-[#222222] p-5 flex flex-col h-[400px]">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3.5 border-b border-[#222222]">
-        <div className="flex items-center gap-2">
-          <Terminal className="w-3.5 h-3.5 text-[#D97706]" />
-          <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-white">
-            OS Synchronization Event Log
-          </h3>
+    <div className="bg-[#121214] border border-[#232326] rounded-xl overflow-hidden flex flex-col h-[300px] text-left">
+      {/* Title Bar */}
+      <div className="px-5 py-3.5 border-b border-[#232326] flex items-center justify-between bg-[#121214] shrink-0">
+        <div className="flex items-center gap-2.5">
+          <span className="font-sans font-semibold text-sm text-[#F5F5F4] tracking-tight">
+            Event Log
+          </span>
+          <span className="font-mono text-[10px] bg-[#1C1C1F] text-[#8A8A8E] border border-[#2E2E33] px-2 py-0.5 rounded-full tabular-nums">
+            {activeEvents.length} {activeEvents.length === 1 ? 'event' : 'events'}
+          </span>
         </div>
-        <span className="text-[10px] font-mono text-[#8C8C8C] tabular-nums">
-          {events.length} events
-        </span>
+
+        <button
+          onClick={handleClear}
+          className="text-[11px] font-mono text-[#8A8A8E] hover:text-[#F5F5F4] hover:bg-[#1C1C1F] px-2.5 py-1 rounded transition-colors focus-amber cursor-pointer"
+          aria-label="Clear event log"
+        >
+          Clear
+        </button>
       </div>
 
-      {/* Filter Chips */}
-      <div className="flex items-center gap-1.5 py-3 border-b border-[#222222] text-[10px] font-mono overflow-x-auto no-scrollbar">
-        {['ALL', 'PRODUCER', 'CONSUMER', 'MUTEX', 'BLOCKED'].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-2.5 py-1 rounded-md transition-colors ${
-              filter === f
-                ? 'bg-white text-black font-semibold'
-                : 'bg-[#161616] text-[#8C8C8C] hover:text-white border border-[#222222]'
-            }`}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
-
-      {/* Scrollable Events Body: 13px JetBrains Mono, hairline rows, syntax-colored verbs */}
-      <div className="flex-1 overflow-y-auto divide-y divide-[#1A1A1A] font-mono text-[13px] text-left pt-1">
-        {filteredEvents.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-[#5E5E5E] text-xs font-mono">
-            — nothing here yet —
+      {/* Log Rows (13px JetBrains Mono, hairline separators #1A1A1A, 300px total height) */}
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto divide-y divide-[#1A1A1A] font-mono text-[13px] px-5 py-1 text-left leading-normal"
+      >
+        {activeEvents.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-[#55555A] text-xs font-mono py-12">
+            — no kernel events recorded —
           </div>
         ) : (
-          filteredEvents.map((ev) => {
-            const op = (ev.operation || '').toLowerCase();
-            let verbColor = 'text-[#D97706]'; // default wait = amber
-            if (ev.result === 'blocked' || ev.result === 'warning' || op.includes('block')) {
-              verbColor = 'text-[#EF4444]'; // blocked = red
-            } else if (op.includes('mutex') || ev.type === 'mutex') {
-              verbColor = 'text-[#3B82F6]'; // mutex = blue
-            } else if (op.startsWith('wait')) {
-              verbColor = 'text-[#D97706]'; // wait = amber
-            } else if (op.startsWith('signal')) {
-              verbColor = 'text-[#22C55E]'; // signal = green
+          activeEvents.map((ev) => {
+            const opRaw = ev.operation || 'OP';
+            const opLower = opRaw.toLowerCase();
+
+            // Syntax-highlighting for verb:
+            // wait = amber #F59E0B, signal = green #22C55E, mutex = blue #60A5FA, BLOCKED = red #EF4444, INSERT/CONSUME = white
+            let verbColor = 'text-[#F5F5F4]';
+            if (opLower.includes('block') || ev.result === 'blocked') {
+              verbColor = 'text-[#EF4444]';
+            } else if (opLower.startsWith('wait')) {
+              verbColor = 'text-[#F59E0B]';
+            } else if (opLower.startsWith('signal')) {
+              verbColor = 'text-[#22C55E]';
+            } else if (opLower.includes('mutex') || ev.type === 'mutex') {
+              verbColor = 'text-[#60A5FA]';
+            } else if (opLower.includes('insert') || opLower.includes('consume') || opLower.includes('take')) {
+              verbColor = 'text-[#F5F5F4]';
             }
 
-            return (
-              <div key={ev.id} className="py-2.5 flex items-start gap-3">
-                {/* Gray Timestamp */}
-                <span className="text-[#6B6B6B] tabular-nums shrink-0 pt-0.5 text-[11px]">
-                  {ev.timestamp || '00:00:00'}
-                </span>
+            // Result tag right-aligned
+            const isBlocked = ev.result === 'blocked' || ev.result === 'warning' || opLower.includes('block');
+            const isSuccess = ev.result === 'success' || !isBlocked;
 
-                {/* Colored Verb & White Description */}
-                <div className="min-w-0 flex-1 leading-snug">
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className={`font-semibold ${verbColor}`}>
-                      {ev.operation}
-                    </span>
-                    {ev.semaphores && (
-                      <span className="text-[11px] text-[#6B6B6B] tabular-nums">
-                        [E:{ev.semaphores.empty} F:{ev.semaphores.full} M:{ev.semaphores.mutex}]
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[#CCCCCC] text-[12px] mt-0.5 font-normal leading-relaxed">
+            return (
+              <div
+                key={ev.id || `${ev.sequence}-${ev.timestamp}`}
+                className="py-2 flex items-center justify-between gap-3 group"
+              >
+                {/* Left: [time] VERB description */}
+                <div className="flex items-baseline gap-2.5 min-w-0 flex-1 truncate">
+                  <span className="text-[#6B6B6B] text-[11px] tabular-nums shrink-0 font-mono">
+                    [{ev.timestamp || '00:00:00'}]
+                  </span>
+
+                  <span className={`font-semibold shrink-0 ${verbColor}`}>
+                    {opRaw}
+                  </span>
+
+                  <span className="text-[#D4D4D8] truncate font-normal text-[13px]">
                     {ev.description}
-                  </p>
+                  </span>
+
+                  {ev.semaphores && (
+                    <span className="text-[#6B6B6B] text-[11px] tabular-nums shrink-0 hidden sm:inline">
+                      ({ev.semaphores.empty}→{ev.semaphores.full})
+                    </span>
+                  )}
                 </div>
+
+                {/* Right: Small Pill */}
+                <span
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 font-medium ${
+                    isBlocked
+                      ? 'bg-[#EF4444]/15 text-[#EF4444] border border-[#EF4444]/30'
+                      : isSuccess
+                      ? 'bg-[#22C55E]/15 text-[#22C55E] border border-[#22C55E]/30'
+                      : 'bg-[#232326] text-[#8A8A8E] border border-[#2E2E33]'
+                  }`}
+                >
+                  {isBlocked ? 'BLOCKED' : 'SUCCESS'}
+                </span>
               </div>
             );
           })
