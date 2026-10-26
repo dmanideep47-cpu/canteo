@@ -1,351 +1,192 @@
-# Canteo — College Canteen Ordering & Live Queue Tracking
+# Canteo v3 — Full-Stack College Canteen Platform + Operating Systems Synchronization Lab
 
-> A production-quality, mobile-first and desktop-responsive React application demonstrating Operating Systems synchronization and the Bounded-Buffer Producer-Consumer problem through an interactive college canteen ordering experience.
-
----
-
-## 1. Project Overview & Problem Statement
-
-In Operating Systems, the **Bounded-Buffer Producer-Consumer Problem** is a foundational concurrency paradigm. Multiple producer processes generate data units and insert them into a finite, shared memory buffer of size $N$, while consumer processes remove and process those units. Without proper synchronization mechanisms (counting semaphores and mutual exclusion locks):
-- Producers might overwrite memory when the buffer is already full (buffer overflow).
-- Consumers might read uninitialized memory or crash when the buffer is empty (buffer underflow).
-- Concurrent processes might interleave reads and writes to shared memory without mutual exclusion, producing non-deterministic state corruption (**race conditions**).
-
-**Canteo** grounds these theoretical principles inside a realistic college canteen application:
-- **Students (Producers)** browse food items, curate a cart, and place orders into the canteen system.
-- **The Kitchen Queue (Bounded Buffer)** holds a strictly constrained capacity of **5 orders** (`BUFFER_CAPACITY = 5`).
-- **Kitchen Staff (Consumers)** retrieve orders, prepare them, mark them ready for collection at Counter 2, and record pickup.
-- **Synchronization Semaphores (`empty`, `full`, `mutex`)** govern buffer access and enforce strict FIFO discipline.
-- **Blocked Producers FIFO Queue**: When the buffer is full ($empty = 0$), excess student orders are queued in a deterministic FIFO blocked pool until a kitchen worker frees a slot.
+> A portfolio-quality, full-stack college canteen ordering platform coupled with an interactive Operating Systems concurrency lab demonstrating the Bounded-Buffer Producer-Consumer problem, counting semaphores, mutex mutual exclusion, race condition avoidance, and deadlock detection.
 
 ---
 
-## 2. Core Features
+## 1. System Architecture
 
-- **Craft Studio Editorial Landing Page**: Typography-driven, warm light theme (`#FAF7F2`), generous whitespace, Instrument Serif headlines, Inter body text, and JetBrains Mono labels.
-- **Responsive Desktop & Mobile Layout**:
-  - **Desktop ($\ge 1024\text{px}$)**: Centered `max-w-[1440px]` layout with a persistent 256px `DesktopSidebar` displaying navigation and real-time buffer semaphore counters, alongside a fluid content canvas.
-  - **Mobile ($< 768\text{px}$)**: Full-width container with persistent `BottomNavigation` bar and thumb-friendly controls.
-- **Dynamic Food Menu & Multi-Filter Search**: Combined real-time text query and category filtering across All, Breakfast, Meals, Snacks, and Beverages, with high-definition food photography via `SafeImage` fallback handling (`#F1EFEA`).
-- **Cart Bottom Sheet**: Accessible modal sheet with real-time subtotal computation, quantity increment/decrement, and live buffer slot capacity indicator.
-- **Live Order Timeline & Campus Schematic Map**: Vertical timeline tracking orders through 5 distinct lifecycle stages (`BLOCKED`, `WAITING`, `PREPARING`, `READY`, `COMPLETED`), coupled with an inline SVG schematic campus map.
-- **Kitchen Dashboard**: Visualizes the 5 buffer slots, distinguishing queued orders from the active worker station, with dedicated controls for staff (`Take Next Order`, `Mark Ready`, `Confirm Pickup`).
-- **Synchronization Lab**:
-  - Live HUD for counting semaphores (`empty`, `full`) and critical section lock (`mutex`).
-  - Interactive simulation triggers (`Simulate Student Order`, `Take Next Order`, `Simulate Queue Full`, `Reset All`).
-  - Scrollable, color-coded, monospace event log with sequence numbers and exact semaphore snapshots.
-- **Race Condition Laboratory**:
-  - Interactive stepper demonstrating deterministic interleaving where concurrent staff access shared order state without a mutex, exposing stale-read clobbering.
-  - Contrasting 6-step serialized execution enforcing mutual exclusion locks.
+```text
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 CANTEO FULL-STACK SYSTEM                                │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+ ┌──────────────────────────────────────────────────────────┐
+ │               REACT FRONTEND (/canteo)                  │
+ │  • React 19 + Vite 8 + Tailwind CSS v4                  │
+ │  • Warm editorial design (#FAF7F2, Instrument Serif)     │
+ │  • Local OS Sync Lab (Local Simulation Engine)           │
+ │  • REST API Client with in-memory JWT bearer tokens      │
+ │  • SockJS + STOMP WebSocket Live Queue Subscriptions     │
+ └────────────────────────────┬─────────────────────────────┘
+                              │ HTTP REST / STOMP WebSocket
+                              ▼
+ ┌──────────────────────────────────────────────────────────┐
+ │               SPRING BOOT BACKEND (/backend)             │
+ │  • Java 21 / 25, Spring Boot 3.4.3                       │
+ │  • Spring Security with Stateless JWT Filters            │
+ │  • Transactional Bounded Queue Service (Capacity = 5)    │
+ │  • STOMP WebSocket Broker on /topic/queue                │
+ │  • SQL Aggregation Analytics (Orders, Revenue, Wait)     │
+ └────────────────────────────┬─────────────────────────────┘
+                              │ JPA / Hibernate / Flyway
+                              ▼
+ ┌──────────────────────────────────────────────────────────┐
+ │               DATABASE LAYER (PostgreSQL / H2)           │
+ │  • Flyway Migrations (V1 init, V2 seed, V3 users)        │
+ │  • Tables: menu_items, orders, order_items, users        │
+ │  • BigDecimal monetary representation                    │
+ │  • Atomic FIFO serialization locks                       │
+ └──────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Operating Systems Synchronization Lab vs Operational Platform
+
+Canteo has two distinct identities:
+1. **Practical Canteen Platform (Full-Stack Backend + Client)**:
+   - Order entry, menu queries, atomic bounded buffer capacity checks (`capacity = 5`), JWT authentication (`STUDENT`, `STAFF`, `ADMIN`), live STOMP queue updates, and analytics.
+2. **Interactive OS Simulator (Local Educational Lab)**:
+   - Strictly local educational simulation inside the browser.
+   - Models counting semaphores (`empty = 5`, `full = 0`), critical section mutual exclusion lock (`mutex = 1`), race conditions, deadlocks, and circular bounded buffer pointer arithmetic (`in = (in + 1) mod 5`, `out = (out + 1) mod 5`).
+   - *Note: JavaScript is inherently single-threaded; the simulator models POSIX semaphore behavior for classroom education.*
 
 ---
 
 ## 3. Technology Stack
 
-- **Framework**: React 19 (`useReducer`, `useState`, `useCallback`, `useMemo`, `useContext`, `useRef`)
-- **Build Tool**: Vite 8 (Native ES Modules, Hot Module Replacement)
-- **Styling**: Tailwind CSS v4 (`@tailwindcss/vite` plugin, `@import "tailwindcss";` in `src/styles/index.css`)
+### Frontend (`/canteo`)
+- **Framework**: React 19 (`useReducer`, `useState`, `useEffect`, `useContext`, `useCallback`, `useMemo`)
+- **Build Tool**: Vite 8 with `@tailwindcss/vite`
+- **Styling**: Tailwind CSS v4 (`#FAF7F2` warm cream, `#111111` deep ink, `#D97706` amber)
+- **Typography**: Instrument Serif (headings), Inter (body), JetBrains Mono (IDs & logs)
+- **Live Updates**: `@stomp/stompjs` + `sockjs-client`
 - **Icons**: `lucide-react`
-- **State Management**: Pure in-memory React Reducer (`canteenReducer.js`) adhering to strict OS invariants with zero external state libraries.
-- **Test Runner**: Native Node.js test runner (`node:test`, `node:assert/strict`)
+- **Test Runner**: Native Node.js Test Runner (`node:test`)
+
+### Backend (`/backend`)
+- **Runtime & Framework**: Java 21 / 25, Spring Boot 3.4.3, Maven
+- **Security**: Spring Security 6, JJWT 0.12.6 (stateless HMAC-SHA256 tokens), BCrypt
+- **Persistence**: Spring Data JPA, Hibernate ORM 6.6, Flyway Database Migrations
+- **Database**: PostgreSQL (production) / H2 in-memory (standalone testing)
+- **Real-Time**: Spring WebSocket with STOMP Simple In-Memory Broker
+- **Testing**: JUnit 5, MockMvc, Spring Security Test, Concurrent ExecutorService suites
 
 ---
 
-## 4. Architecture and File Structure
+## 4. REST API Endpoint Specification
 
-### Text Architecture Diagram
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       CANTEO SYNCHRONIZATION ARCHITECTURE                   │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-       [ Student Producers ] ─── (Submits Food Order)
-                 │
-                 ▼
-         wait(empty)  ──── If empty == 0? ───► [ Blocked Producers FIFO Pool ]
-                 │                                        ▲
-                 ▼ (empty > 0)                            │ (Admitted atomically
-         wait(mutex)                                      │  in same transition)
-                 │                                        │
-                 ▼                                        │
-    ┌─────────────────────────┐                           │
-    │  CRITICAL SECTION (CS)  │                           │
-    │  Enqueue Order -> Queue │                           │
-    └─────────────────────────┘                           │
-                 │                                        │
-                 ▼                                        │
-         signal(mutex)                                    │
-                 │                                        │
-                 ▼                                        │
-          signal(full)                                    │
-                 │                                        │
-                 ▼                                        │
-      ┌──────────────────────────────────────────────┐    │
-      │  BOUNDED BUFFER (Slots 1..5, Capacity N = 5) │    │
-      │  [ Slot 1 ] [ Slot 2 ] [ Slot 3 ] [ ... ]    │    │
-      └──────────────────────────────────────────────┘    │
-                 │                                        │
-                 ▼                                        │
-            wait(full)                                    │
-                 │                                        │
-                 ▼                                        │
-            wait(mutex)                                   │
-                 │                                        │
-                 ▼                                        │
-    ┌─────────────────────────┐                           │
-    │  CRITICAL SECTION (CS)  │                           │
-    │  Dequeue -> Worker Prep │ ──────────────────────────┘
-    └─────────────────────────┘
-                 │
-                 ▼
-           signal(mutex)
-                 │
-                 ▼
-           signal(empty)
-                 │
-                 ▼
-    [ Worker Station 1 (PREPARING) ]
-                 │
-                 ▼ (markReady)
-    [ Counter 2 Pickup (READY) ]
-                 │
-                 ▼ (markCollected)
-    [ History Archive (COMPLETED) ]
-```
-
-### File Structure
-```text
-canteo/
-├── public/
-│   └── favicon.svg                  # Minimalist SVG favicon
-├── src/
-│   ├── app/
-│   │   ├── App.jsx                  # Main application shell with responsive layout & single back nav
-│   │   └── AppContext.jsx           # Context provider binding reducer state & memoized actions
-│   ├── components/
-│   │   ├── BottomNavigation.jsx     # Mobile persistent 4-tab bottom navigation
-│   │   ├── CartSheet.jsx            # Animated modal bottom sheet with live cart controls
-│   │   ├── CategoryChips.jsx        # Pill category filter chips
-│   │   ├── EventLog.jsx             # Monospace scrollable timeline of OS operations
-│   │   ├── FoodCard.jsx             # Product card with responsive photo, prep badge, and add button
-│   │   ├── OrderTimeline.jsx        # Vertical lifecycle stepper & SVG schematic campus map
-│   │   ├── QueueSlot.jsx            # Visual card for bounded buffer slots 1–5
-│   │   ├── SafeImage.jsx            # Resilient image loader with skeleton shimmer and fallback
-│   │   ├── SearchBar.jsx            # Real-time search input
-│   │   ├── SemaphoreChip.jsx        # HUD displaying empty, full, and mutex states
-│   │   └── Toast.jsx                # Floating accessible notification alerts
-│   ├── data/
-│   │   └── menuItems.js             # Initial food catalogue with verified Unsplash photography
-│   ├── landing/
-│   │   ├── LandingPage.jsx          # Editorial landing page container with 5 distinct sections
-│   │   └── components/
-│   │       ├── CaseStudyModal.jsx   # Architectural deep-dive case study modal
-│   │       ├── CtaFooter.jsx        # Editorial footer call-to-action
-│   │       ├── HeroSection.jsx      # 2-column desktop hero with Masala Dosa photography
-│   │       ├── LineupSection.jsx    # Deep-linked cards for Menu, Orders, Kitchen, and Sync Lab
-│   │       ├── Navbar.jsx           # Top editorial header with wordmark and quick links
-│   │       ├── PrinciplesSection.jsx# 4 core engineering design principles
-│   │       └── ShowcaseSection.jsx  # Interactive UI showcase gallery
-│   ├── logic/
-│   │   ├── canteenActions.js        # Action type constants and pure action creators
-│   │   ├── canteenInvariants.js     # Runtime invariant validation function
-│   │   ├── canteenReducer.js        # Pure authoritative reducer managing queue & semaphores
-│   │   ├── raceConditionReducer.js  # Isolated reducer for the race condition simulation
-│   │   └── useCanteenQueue.js       # Custom hook providing stable action dispatchers
-│   ├── screens/
-│   │   ├── KitchenScreen.jsx        # Consumer bounded buffer slots & worker prep station
-│   │   ├── MenuScreen.jsx           # Producer order entry, search, categories, and cart
-│   │   ├── OrdersScreen.jsx         # Live tracking, multi-order switcher, and SVG map
-│   │   └── SyncLabScreen.jsx        # Educational semaphore HUD, controls, and race demo
-│   ├── styles/
-│   │   └── index.css                # Tailwind v4 import, custom color tokens, typography utilities
-│   ├── App.jsx                      # Root re-export for external module compatibility
-│   └── main.jsx                     # React root mount with StrictMode
-├── test/
-│   ├── canteenReducer.test.js       # Unit test suite verifying invariants & transitions
-│   └── raceConditionReducer.test.js # Unit test suite verifying race demo logic
-├── index.html                       # HTML5 entry with Google Fonts (Instrument Serif, Inter, JetBrains Mono)
-├── package.json                     # Scripts and dependencies
-└── vite.config.js                   # Vite config with @tailwindcss/vite
-```
+| Method | Endpoint | Access / Role | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Public | Register new user account; returns JWT token |
+| `POST` | `/api/auth/login` | Public | Authenticate credentials; returns JWT token |
+| `GET` | `/api/menu` | Public | List all available canteen menu items |
+| `GET` | `/api/menu/{id}` | Public | Get single menu item details |
+| `GET` | `/api/menu/categories` | Public | List distinct menu categories |
+| `POST` | `/api/orders` | `STUDENT`, `STAFF`, `ADMIN` | Place new order; computes total from DB prices; returns 409 if 5 slots busy |
+| `GET` | `/api/orders/{id}` | Authenticated | Get order details (Students restricted to own orders) |
+| `GET` | `/api/orders` | Authenticated | List orders (Students get own history; Staff/Admin get all) |
+| `PATCH` | `/api/orders/{id}/status` | `STAFF`, `ADMIN` | Advance order status (`ACCEPTED`, `PREPARING`, `READY`, `COMPLETED`) |
+| `POST` | `/api/orders/{id}/pay` | Authenticated | Demo checkout marking order as `PAID` |
+| `GET` | `/api/queue/status` | Public | Bounded buffer state: capacity (5), occupied, available slots |
+| `GET` | `/api/analytics/summary` | `ADMIN`, `STAFF` | Orders today, revenue today, peak hour, avg wait time |
+| `WS` | `/ws` (STOMP) | Public | WebSocket endpoint broadcasting on `/topic/queue` and `/topic/orders/{id}` |
 
 ---
 
-## 5. Synchronization Concepts & Semaphores
+## 5. Database Schema & Flyway Migrations
 
-### Counting Semaphores
-- **`empty` (Initial value = 5)**: Represents the count of free buffer slots. Before inserting an order, a producer decrements `empty` (`wait(empty)`). If `empty == 0`, the producer is blocked and queued into `blockedProducers`.
-- **`full` (Initial value = 0)**: Represents the count of pending orders residing in the buffer. Before removing an order, a consumer decrements `full` (`wait(full)`). If `full == 0`, the consumer is blocked until an order arrives.
-- **Buffer Invariant**: At all times, the system enforces:
-  $$\text{empty} + \text{full} = 5 \quad \text{and} \quad 0 \le \text{queue.length} \le 5$$
-
-### Mutual Exclusion (`mutex`)
-- **`mutex` (Initial value = 1)**: Binary semaphore guarding access to the shared queue memory during insertions and removals.
-- `1` indicates the critical section is unheld.
-- `0` indicates a process is actively modifying queue state.
-- **Educational Note**: The JavaScript runtime operates on a single-threaded synchronous event loop. The `mutex` is an educational model of lock acquisition and release, verifying that concurrent operations cannot interleave unsafely.
-
-### Exact Semaphore Event Sequences
-- **Producer (Order Submission)**:
-  $$\text{wait}(\text{empty}) \longrightarrow \text{wait}(\text{mutex}) \longrightarrow \text{insert} \longrightarrow \text{signal}(\text{mutex}) \longrightarrow \text{signal}(\text{full})$$
-- **Consumer (Kitchen Retrieval)**:
-  $$\text{wait}(\text{full}) \longrightarrow \text{wait}(\text{mutex}) \longrightarrow \text{remove} \longrightarrow \text{signal}(\text{mutex}) \longrightarrow \text{signal}(\text{empty})$$
+### Flyway Migrations
+- **`V1__init.sql`**:
+  - `menu_items`: `id`, `name`, `description`, `category`, `price`, `image_url`, `available`, `created_at`, `updated_at`.
+  - `orders`: `id`, `order_number`, `status`, `total_amount`, `created_at`, `updated_at`.
+  - `order_items`: `id`, `order_id` (FK), `menu_item_id` (FK), `quantity`, `unit_price_at_purchase`, `subtotal`.
+- **`V2__seed_menu.sql`**:
+  - Seeds 6 authentic South Indian canteen items (Masala Dosa ₹40, Meals Thali ₹60, Idli Vada ₹35, Samosa ₹20, Tea ₹10, Coffee ₹15) with verified 200 OK Unsplash photography.
+- **`V3__users.sql`**:
+  - `users`: `id`, `email`, `password_hash`, `name`, `role` (`STUDENT`, `STAFF`, `ADMIN`), timestamps.
+  - Adds `user_id` foreign key to `orders` table.
 
 ---
 
-## 6. Order Lifecycle & Blocked Producer FIFO Semantics
+## 6. Seed Credentials
 
-An order progresses through five lifecycle stages:
-1. **`BLOCKED`**: The student submitted the order, but the bounded queue was full (5/5 slots occupied). The order waits in a separate FIFO blocked queue.
-2. **`WAITING`**: The order is actively occupying one of the 5 bounded buffer slots, waiting for kitchen pickup.
-3. **`PREPARING`**: The consumer removed the order from the queue and kitchen staff is actively preparing it at Worker Station 1.
-4. **`READY`**: Food preparation is complete. The order is waiting for student pickup at Counter 2.
-5. **`COMPLETED`**: The student collected the food. The order is archived in history.
+Default seeded personas for grading and demonstration:
+- **Student**: `student@canteo.edu` / `password123`
+- **Kitchen Staff**: `staff@canteo.edu` / `password123`
+- **Administrator**: `admin@canteo.edu` / `password123`
 
-### Atomic Blocked Producer Admission
-When kitchen staff takes an order (`TAKE_ORDER`) while `blockedProducers` is non-empty:
-1. The consumer dequeues the oldest waiting order from the buffer (`full--`, `empty++`).
-2. In the **exact same reducer transition**, the oldest blocked producer is shifted out of `blockedProducers` and appended to the queue (`empty--`, `full++`).
-3. Two distinct log entries are produced: the consumer removal followed by the blocked producer admission.
-4. The queue remains at capacity (5/5), preserving FIFO ordering without temporary illegal states.
+*(The frontend includes one-click persona switching in the top-right user menu.)*
 
 ---
 
-## 7. Race Condition Mechanics
+## 7. OS Synchronization Principles Illustrated
 
-In the **Sync Lab**, a dedicated laboratory contrasts unsynchronized concurrency against mutual exclusion using a shared resource `ORD101 (WAITING)`:
-
-### Without Mutex (Stale Read Conflict)
-1. **Step 1**: Staff A reads `ORD101` as `WAITING`.
-2. **Step 2**: Staff B reads `ORD101` as `WAITING` concurrently before Staff A commits.
-3. **Step 3**: Staff A updates the status in memory to `PREPARING`.
-4. **Step 4**: Staff B writes `READY` based on its stale read, clobbering Staff A's transition.
-5. **Result**: Red warning badge: *"Race condition detected: inconsistent order status."*
-
-### With Mutex (Serialized Execution)
-1. **Step 1**: Staff A acquires `mutex` lock.
-2. **Step 2**: Staff A verifies `WAITING` and updates to `PREPARING`.
-3. **Step 3**: Staff A releases `mutex` lock.
-4. **Step 4**: Staff B acquires `mutex` lock.
-5. **Step 5**: Staff B reads verified `PREPARING` state and updates to `READY`.
-6. **Step 6**: Staff B releases `mutex` lock.
-7. **Result**: Green success badge: *"Mutual exclusion enforced. Valid state transitions preserved."*
+1. **Counting Semaphores**:
+   - `empty` (initialized to 5): Tracks available buffer slots. Producer executes `wait(empty)` before buffer insertion.
+   - `full` (initialized to 0): Tracks filled buffer slots. Consumer executes `wait(full)` before removing an item.
+2. **Mutual Exclusion Lock (`mutex`)**:
+   - Binary semaphore initialized to 1. Protects the critical section during buffer array indexing (`in`, `out`) preventing race conditions.
+3. **Circular Buffer Arithmetic**:
+   - Insert: `buffer[in] = order; in = (in + 1) % 5;`
+   - Remove: `order = buffer[out]; out = (out + 1) % 5;`
+4. **Deadlock Demonstration**:
+   - Case study contrasting canonical order (`wait(empty)` then `wait(mutex)`) with inverted order (`wait(mutex)` before `wait(empty)`). When the buffer is full, inverted ordering causes circular wait deadlock where the producer sleeps holding the lock, starving the consumer.
 
 ---
 
-## 8. Food Photography & Image Verification
+## 8. Run Instructions
 
-All images use real Unsplash food photography and load through the resilient `SafeImage` component. If offline or if network access is restricted, the component gracefully renders a warm `#F1EFEA` placeholder with the food title:
-
-| Item | Image URL ID | Resolution | Aspect Ratio | Verification Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **Masala Dosa** | `photo-1668236543090-82eba5ee5976` | 800 × 600 | 4:3 | Verified / SafeImage Fallback |
-| **South Indian Meals** | `photo-1610057099443-fde8c4d50f91` | 800 × 600 | 4:3 | Verified / SafeImage Fallback |
-| **Idli Vada Combo** | `photo-1589301760014-d929f3979dbc` | 800 × 600 | 4:3 | Verified / SafeImage Fallback |
-| **Samosa Plate** | `photo-1601050690597-df0568f70950` | 800 × 600 | 4:3 | Verified / SafeImage Fallback |
-| **Masala Chai** | `photo-1576092768241-dec231879fc3` | 800 × 600 | 4:3 | Verified / SafeImage Fallback |
-| **Filter Coffee** | `photo-1514432324607-a09d9b4aefdd` | 800 × 600 | 4:3 | Verified / SafeImage Fallback |
-
----
-
-## 9. Installation & Setup
-
-### Prerequisites
-- Node.js (v18.0.0 or higher recommended, Node 20+ tested)
-- npm (v9.0.0 or higher)
-
-### Setup Commands
+### 1. Run Spring Boot Backend
 ```bash
-# Navigate to the project directory
+cd backend
+./mvnw spring-boot:run
+```
+*(Backend starts on port 8080 with H2 in-memory database by default. To connect to PostgreSQL, set environment variables `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`.)*
+
+### 2. Run React Frontend
+```bash
 cd canteo
-
-# Install dependencies
 npm install
-
-# Run the development server
 npm run dev
+```
+*(Open http://localhost:5173 to access the application.)*
 
-# Run unit tests
+### 3. Run Automated Tests
+```bash
+# Backend Test Suite (16/16 pass)
+cd backend
+./mvnw test
+
+# Frontend Unit & Concurrency Tests (12/12 pass)
+cd canteo
 npm test
-
-# Build for production
+node --test test/deadlockDemoReducer.test.js
+npm run lint
 npm run build
 ```
 
 ---
 
-## 10. Manual Verification & Test Instructions
+## 9. Demo Workflow for Academic Grading
 
-### Scenario 1: Test Queue-Full & Blocked Producers
-1. Open the **Menu** tab (`/app?tab=menu`).
-2. Add items to the cart and place orders until 5 orders have been submitted.
-3. Observe the queue slot badge in the header changes from `5/5 slots available` to `0/5 slots available`.
-4. Attempt to place a 6th order.
-5. Verify the red notification banner appears: *"Buffer full: order waiting for a free slot."*
-6. Switch to the **Kitchen** tab. Confirm that 5 orders occupy the buffer slots and the 6th order appears in the **Blocked Producers FIFO Queue**.
-
-### Scenario 2: Test Blocked Producer Admission
-1. With the buffer at full capacity (5/5) and 1 order blocked, navigate to the **Kitchen** tab.
-2. Click **Take Next Order**.
-3. Observe that the oldest order is transferred to the **Worker Station** (`PREPARING`), and the blocked order is atomically admitted into the queue.
-4. Verify the buffer remains at 5/5 capacity and the blocked producers list becomes empty.
-5. In **Sync Lab**, inspect the event log to confirm two sequential entries: consumer retrieval followed by blocked producer admission.
-
-### Scenario 3: Test Consumer Blocking on Empty Queue
-1. In **Sync Lab**, click **Reset All**. Semaphores reset to `empty: 5`, `full: 0`, `mutex: 1`.
-2. Navigate to the **Kitchen** tab.
-3. Click **Take Next Order** when no orders exist.
-4. Observe the toast notification: *"Buffer empty: consumer blocked."*
-5. Inspect the event log in **Sync Lab** to verify the blocked consumer operation is logged with invariant validation.
-
-### Scenario 4: Test Race Condition Demonstration
-1. Navigate to the **Sync Lab** tab.
-2. Scroll to the **Race Condition Demonstration** section.
-3. Click **Run Without Mutex**. Watch the 4-step execution trace and observe the red collision alert: *"Race condition detected: inconsistent order status."*
-4. Click **Run With Mutex**. Watch the 6-step serialized locking trace and observe the green success banner: *"Mutual exclusion enforced. Valid state transitions preserved."*
-
-### Scenario 5: Resetting the Simulator
-1. Click the **Reset All** button in the header of **Sync Lab**.
-2. All semaphores reset to `empty: 5`, `full: 0`, `mutex: 1`.
-3. The queue, blocked producers, worker station, and history are wiped cleanly, and the order counter restarts at `ORD101`.
-
-### Scenario 6: Full Order Lifecycle & Counter 2 Pickup
-1. Place an order for **Masala Dosa** from the **Menu** tab.
-2. Switch to **Orders** tab to observe the order in `WAITING` status on the vertical timeline.
-3. Switch to **Kitchen** and click **Take Next Order** (moves to `PREPARING`).
-4. Click **Mark Ready**. Observe the green alert banner: *"Your food is ready — collect at Counter 2."*
-5. Click **Confirm Student Pickup**. The order transitions to `COMPLETED` and moves to Past Orders history.
+1. **Place Order**: Open Menu, select Masala Dosa + Coffee, submit order. Observe order total ₹55.00 calculated strictly by backend from database prices.
+2. **Queue Capacity Enforcement**: Submit 5 orders. Attempt to place a 6th order. Observe HTTP 409 Conflict rejection.
+3. **Live Kitchen Dashboard**: Open Kitchen screen. Observe real-time STOMP WebSocket updates reflecting queue occupancy. Advance order to `PREPARING` and `READY`.
+4. **Order Tracking & Demo Checkout**: Switch to Orders screen. Observe live position indicator (e.g. "Slot 02 of 5"), estimated wait time ("6 min"), and click "Demo Checkout" to mark as `PAID`.
+5. **Analytics Dashboard**: Switch persona to Administrator or Kitchen Staff. Open Analytics tab to view aggregated metrics: Orders today, Revenue today, Peak Hour, and Average Wait Time.
+6. **OS Sync Lab**: Open Sync Lab. Run the Race Condition Laboratory and Deadlock Case Study to inspect step-by-step mutex serialization and circular wait resolution.
 
 ---
 
-## 11. Screenshots
+## 10. Known Limitations
 
-| Screen | View | Description |
-| :--- | :--- | :--- |
-| **Landing Page** | Desktop / Mobile | *`[Placeholder: Editorial Landing Page — Hero with Masala Dosa, Lineup cards, Principles, Showcase]`* |
-| **Menu Screen** | Desktop / Mobile | *`[Placeholder: Menu Screen — 3-column food grid, search filter, category chips, floating cart bar]`* |
-| **Cart Sheet** | Mobile Modal | *`[Placeholder: Cart Modal — Item list, price subtotals, queue capacity notice, place order action]`* |
-| **Orders & Tracking** | Desktop / Mobile | *`[Placeholder: Orders Screen — Campus schematic map, live vertical lifecycle timeline, active switcher]`* |
-| **Kitchen Dashboard** | Desktop / Mobile | *`[Placeholder: Kitchen Dashboard — 5 buffer slots, single active worker station, semaphore HUD]`* |
-| **Sync Lab** | Desktop / Mobile | *`[Placeholder: Sync Lab — Counting semaphores, simulation triggers, live event log, race lab]`* |
+- **Single JVM Node**: Concurrency locks use Java `synchronized` and `TransactionTemplate` inside a single JVM. Distributed deployments across multiple server nodes would require Redis distributed locks or PostgreSQL table-level advisory locks.
+- **In-Memory Browser Simulation**: The visual Sync Lab in the frontend runs on React's event loop to model OS semaphore semantics safely without kernel privileges.
 
 ---
 
-## 12. Limitations of an In-Memory Simulation
+## 11. License
 
-- **Single-Threaded JavaScript Runtime**: All React reducer transitions run synchronously on the browser's JavaScript event loop. The mutex locks and counting semaphores are educational simulations representing how an OS kernel or Java thread pool (`java.util.concurrent.Semaphore`) operates.
-- **In-Memory State**: State is preserved during the browser session but resets upon hard refresh. No external database or network backend is utilized.
-
----
-
-## 13. Future Enhancements
-
-- **Multi-Worker Kitchen**: Expand the kitchen model to support multiple concurrent worker stations with individual queue locks.
-- **Priority Scheduling**: Implement priority queues with aging to demonstrate priority inversion and avoidance algorithms.
-- **Web Workers Simulation**: Offload consumer and producer processes to dedicated Web Workers communicating via `SharedArrayBuffer` and `Atomics`.
-
----
-
-## 14. License
-
-Distributed under the MIT License. Free for academic and educational portfolio use.
+MIT License. Free for educational, academic, and portfolio demonstration.

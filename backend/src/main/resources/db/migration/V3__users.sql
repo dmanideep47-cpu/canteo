@@ -1,0 +1,17 @@
+-- V3__users.sql: Create Users table and link orders to users
+
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(180) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    name VARCHAR(120) NOT NULL,
+    role VARCHAR(30) NOT NULL DEFAULT 'STUDENT',
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id BIGINT;
+ALTER TABLE orders ADD CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
