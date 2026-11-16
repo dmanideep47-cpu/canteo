@@ -41,10 +41,17 @@ export default function Navbar({ onLaunchPrototype }) {
 
           <button
             onClick={() => onLaunchPrototype()}
-            className="h-9 px-4 rounded-full bg-[#111111] text-white text-xs font-medium hover:bg-[#1A1A1A] transition-colors active:scale-[0.98]"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onLaunchPrototype();
+              }
+            }}
+            className="btn-editorial-nav"
             aria-label="Launch Prototype"
           >
-            Launch Prototype
+            <span>Launch Prototype</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-white/90" />
           </button>
         </nav>
       </div>

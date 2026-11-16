@@ -1,0 +1,98 @@
+{
+  "heading": "One queue. Two kitchen workers.",
+  "initialButtons": [
+    "MenuOrder Submission",
+    "OrdersLive Queue Tracking",
+    "KitchenBounded Workstation",
+    "SyncLabEducational Engine",
+    "← Editorial",
+    "01\nSystem Model",
+    "02\nProducer–Consumer Simulator",
+    "03\nRace Condition Laboratory",
+    "04\nSynchronization Solution",
+    "05\nSynchronization Flowcharts",
+    "Auto Run",
+    "Step Instruction",
+    "Step Process",
+    "Advance Kitchen Tick",
+    "Pause",
+    "Resume",
+    "Reset",
+    "Load scenario",
+    "Capture evidence",
+    "Explore",
+    "Guided Lab",
+    "Challenge",
+    "Open simulator",
+    "SLOT 0\nFIFO HEAD\nNEXT WRITE\nREADY\nEmpty slot\nAvailable capacity\nREAD\nWRITE",
+    "SLOT 1\nREADY\nEmpty slot\nAvailable capacity",
+    "SLOT 2\nREADY\nEmpty slot\nAvailable capacity",
+    "SLOT 3\nREADY\nEmpty slot\nAvailable capacity",
+    "SLOT 4\nREADY\nEmpty slot\nAvailable capacity",
+    "Add Producer",
+    "Add Consumer",
+    "EMPTY · initial 5\n5",
+    "FULL · initial 0\n0",
+    "MUTEX · available 1 / held 0\n1 · Free",
+    "Details",
+    "Without protection",
+    "With mutex",
+    "01READO01Masala DosaIn queue",
+    "02O02Idli & SambarIn queue",
+    "03O03Vegetable SandwichIn queue",
+    "04EmptyAvailable slotCapacity free"
+  ],
+  "imageRequests": [
+    {
+      "status": 304,
+      "url": "http://127.0.0.1:5173/synclab/canteen-dishes.png"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:5173/synclab/canteen-dishes.png"
+    },
+    {
+      "status": 200,
+      "url": "http://127.0.0.1:5173/synclab/canteen-dishes.png"
+    }
+  ],
+  "failedImageRequests": [
+    {
+      "url": "http://127.0.0.1:5173/synclab/canteen-dishes.png",
+      "error": ""
+    },
+    {
+      "url": "http://127.0.0.1:5173/synclab/canteen-dishes.png",
+      "error": ""
+    },
+    {
+      "url": "http://127.0.0.1:5173/synclab/canteen-dishes.png",
+      "error": ""
+    }
+  ],
+  "brokenImages": [],
+  "fallbackCount": 3,
+  "pageHorizontalOverflow": false,
+  "mobileDocumentWidth": {
+    "scroll": 390,
+    "client": 390
+  },
+  "controls": {
+    "unsafeStaleSlotHighlighted": true,
+    "oneStep": "STEP 01 OF 04",
+    "pauseStops": true,
+    "resetDuringPlay": true,
+    "modeSwitchStops": true,
+    "completed": true,
+    "replayResets": true,
+    "replayStarts": true,
+    "navigationStopsPlayback": true,
+    "keyboardSpaceActivatesMode": true,
+    "keyboardFocusVisible": true,
+    "reducedMotion": {
+      "matches": true,
+      "duration": "1e-05s"
+    }
+  },
+  "runtimeErrors": []
+}

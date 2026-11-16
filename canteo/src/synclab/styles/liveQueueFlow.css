@@ -1,0 +1,858 @@
+/* ==========================================================================
+   LIVE QUEUE FLOW — REFINED LIVE QUEUE DIAGRAM
+   One continuous lifecycle path, compact queue tray, and live feedback.
+   ========================================================================== */
+
+.live-queue-flow-section {
+  background-color: #FFFFFF;
+  border: 1px solid #E4E4E7;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  margin: var(--space-20, 20px) 0 var(--space-32, 32px);
+  padding: 16px 20px 14px;
+  box-sizing: border-box;
+  font-family: var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+}
+
+/* --------------------------------------------------------------------------
+   1. Compact Header
+   -------------------------------------------------------------------------- */
+.lqf-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F4F4F5;
+}
+
+.lqf-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lqf-title {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #09090B;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.lqf-subtitle {
+  font-size: 13px;
+  color: #71717A;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.lqf-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.lqf-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  line-height: 1.4;
+  border: 1px solid transparent;
+}
+
+.lqf-status-pill.status-live {
+  background-color: #F0FDF4;
+  color: #15803D;
+  border-color: #DCFCE7;
+}
+
+.lqf-status-pill.status-paused {
+  background-color: #F4F4F5;
+  color: #52525B;
+  border-color: #E4E4E7;
+}
+
+.lqf-status-pill.status-idle {
+  background-color: #FAFAFA;
+  color: #A1A1AA;
+  border-color: #F4F4F5;
+}
+
+.lqf-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.lqf-collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #71717A;
+  background: transparent;
+  border: 1px solid #E4E4E7;
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.lqf-collapse-btn:hover {
+  color: #18181B;
+  background-color: #F4F4F5;
+  border-color: #D4D4D8;
+}
+
+.lqf-collapse-btn:focus-visible {
+  outline: 2px solid #18181B;
+  outline-offset: 1px;
+}
+
+/* --------------------------------------------------------------------------
+   2. Connected Lifecycle Path Track
+   -------------------------------------------------------------------------- */
+.lqf-flow-body {
+  padding-top: 14px;
+}
+
+.lqf-track-container {
+  position: relative;
+  margin-bottom: 6px;
+}
+
+.lqf-track-line {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 31px;
+  height: 1px;
+  background-color: #E4E4E7;
+  z-index: 1;
+}
+
+.lqf-track-stages {
+  display: grid;
+  grid-template-columns: minmax(130px, 1.1fr) minmax(280px, 2.4fr) minmax(180px, 1.3fr) minmax(140px, 1.1fr);
+  gap: 16px;
+  position: relative;
+  z-index: 2;
+}
+
+.lqf-track-node-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.lqf-track-label-group {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #52525B;
+  letter-spacing: 0.03em;
+}
+
+.lqf-track-number {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: #A1A1AA;
+}
+
+.lqf-track-name {
+  color: #52525B;
+}
+
+.lqf-track-pin-wrapper {
+  display: flex;
+  align-items: center;
+  height: 14px;
+  padding-left: 2px;
+}
+
+.lqf-node-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #FFFFFF;
+  border: 2px solid #A1A1AA;
+  display: inline-block;
+  transition: all 120ms ease;
+}
+
+.lqf-track-node-wrapper.is-active .lqf-node-dot {
+  border-color: #18181B;
+  background-color: #18181B;
+  box-shadow: 0 0 0 3px #F4F4F5;
+}
+
+.lqf-track-node-wrapper.is-active .lqf-track-name {
+  color: #09090B;
+}
+
+/* --------------------------------------------------------------------------
+   3. Unified Empty State (When Entire Session Is Pristine)
+   -------------------------------------------------------------------------- */
+.lqf-unified-empty-state {
+  margin: 14px 0 6px;
+  padding: 16px 20px;
+  text-align: center;
+  background-color: #FAFAFA;
+  border: 1px dashed #E4E4E7;
+  border-radius: 6px;
+}
+
+.lqf-unified-empty-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #18181B;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.lqf-unified-empty-desc {
+  font-size: 12px;
+  color: #71717A;
+  margin: 4px 0 0;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   4. Four Aligned Stage Columns
+   -------------------------------------------------------------------------- */
+.lqf-stages-grid {
+  display: grid;
+  grid-template-columns: minmax(130px, 1.1fr) minmax(280px, 2.4fr) minmax(180px, 1.3fr) minmax(140px, 1.1fr);
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 6px;
+}
+
+.lqf-stage-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lqf-quiet-placeholder {
+  font-size: 12px;
+  color: #A1A1AA;
+  padding: 6px 0;
+  line-height: 1.4;
+}
+
+.lqf-stage-subhead {
+  font-size: 11px;
+  color: #71717A;
+  margin-bottom: 6px;
+  font-family: var(--font-mono, monospace);
+}
+
+.lqf-mobile-stage-head {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Stage 1: Produce Content
+   -------------------------------------------------------------------------- */
+.lqf-proc-compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lqf-proc-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 3px 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 100ms ease;
+  width: 100%;
+}
+
+.lqf-proc-row:hover {
+  background-color: #F4F4F5;
+}
+
+.lqf-proc-row.selected {
+  background-color: #F4F4F5;
+  border-color: #D4D4D8;
+}
+
+.lqf-proc-row:focus-visible {
+  outline: 2px solid #18181B;
+  outline-offset: 1px;
+}
+
+.lqf-proc-id {
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  font-weight: 600;
+  color: #18181B;
+  flex-shrink: 0;
+}
+
+.lqf-proc-bullet {
+  color: #A1A1AA;
+}
+
+.lqf-proc-state {
+  font-size: 12px;
+  color: #71717A;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lqf-proc-state.state-ready {
+  color: #71717A;
+}
+
+.lqf-proc-state.state-producing {
+  color: #2563EB;
+}
+
+.lqf-proc-state.state-waiting_capacity,
+.lqf-proc-state.state-waiting_mutex {
+  color: #D97706;
+}
+
+.lqf-proc-state.state-stopping {
+  color: #7C3AED;
+}
+
+.lqf-proc-state.state-completed {
+  color: #16A34A;
+}
+
+.lqf-view-more-btn {
+  background: none;
+  border: none;
+  padding: 3px 6px;
+  color: #2563EB;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+
+.lqf-view-more-btn:hover {
+  text-decoration: underline;
+}
+
+/* --------------------------------------------------------------------------
+   Stage 2: Queue Content (Centerpiece Tray)
+   -------------------------------------------------------------------------- */
+.lqf-queue-subhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
+.lqf-queue-flow-dir {
+  font-size: 11px;
+  font-weight: 600;
+  color: #2563EB;
+}
+
+.lqf-queue-occupancy {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: #71717A;
+}
+
+.lqf-queue-tray {
+  background-color: #FAFAFA;
+  border: 1px solid #E4E4E7;
+  border-radius: 6px;
+  padding: 8px 10px;
+  min-height: 78px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.lqf-tray-empty-text {
+  font-size: 12px;
+  color: #A1A1AA;
+  width: 100%;
+  text-align: center;
+}
+
+.lqf-tray-tickets-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  width: 100%;
+  padding-bottom: 2px;
+}
+
+.lqf-queue-ticket {
+  background-color: #FFFFFF;
+  border: 1px solid #D4D4D8;
+  border-radius: 5px;
+  width: 112px;
+  min-width: 112px;
+  max-width: 112px;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+  transition: border-color 100ms ease, box-shadow 100ms ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.lqf-queue-ticket:hover {
+  border-color: #A1A1AA;
+}
+
+.lqf-queue-ticket.is-front {
+  border-color: #2563EB;
+}
+
+.lqf-queue-ticket.selected {
+  border-color: #18181B;
+  box-shadow: 0 0 0 1px #18181B;
+}
+
+.lqf-queue-ticket.is-active-event {
+  box-shadow: 0 0 0 1px #2563EB;
+}
+
+.lqf-queue-ticket:focus-visible {
+  outline: 2px solid #18181B;
+  outline-offset: 1px;
+}
+
+.lqf-ticket-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lqf-ticket-id {
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  font-weight: 600;
+  color: #09090B;
+}
+
+.lqf-front-badge {
+  font-size: 9px;
+  font-weight: 600;
+  color: #2563EB;
+  background-color: #EFF6FF;
+  padding: 1px 4px;
+  border-radius: 3px;
+  line-height: 1.1;
+}
+
+.lqf-ticket-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #27272A;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lqf-ticket-slot {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: #71717A;
+}
+
+.lqf-tray-arrow {
+  color: #A1A1AA;
+  font-size: 12px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Waiting Summaries Beneath Stages (Produce & Queue)
+   -------------------------------------------------------------------------- */
+.lqf-stage-wait-summary {
+  margin-top: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  color: #B45309;
+  line-height: 1.4;
+}
+
+.lqf-amber-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #D97706;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.lqf-wait-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lqf-wait-text {
+  color: #B45309;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lqf-inline-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2563EB;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  flex-shrink: 0;
+}
+
+.lqf-inline-link-btn:hover {
+  color: #1D4ED8;
+}
+
+.lqf-inline-link-btn:focus-visible {
+  outline: 2px solid #18181B;
+  outline-offset: 1px;
+}
+
+.lqf-wait-details-pop {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background-color: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 11px;
+}
+
+.lqf-pop-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.lqf-pop-label {
+  color: #92400E;
+  font-weight: 500;
+}
+
+.lqf-waiter-chip {
+  background-color: #FFFFFF;
+  border: 1px solid #FCD34D;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  color: #92400E;
+  cursor: pointer;
+}
+
+.lqf-waiter-chip:hover {
+  background-color: #FEF3C7;
+}
+
+.lqf-waiter-chip.mutex {
+  border-color: #FBBF24;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Stage 3: Prepare Content
+   -------------------------------------------------------------------------- */
+.lqf-prep-compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lqf-prep-card {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 100ms ease;
+}
+
+.lqf-prep-card:hover {
+  background-color: #F4F4F5;
+}
+
+.lqf-prep-card.is-active-event {
+  background-color: #F8FAFC;
+  border-color: #BFDBFE;
+}
+
+.lqf-prep-card:focus-visible {
+  outline: 2px solid #18181B;
+  outline-offset: 1px;
+}
+
+.lqf-prep-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.lqf-prep-worker-id {
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  font-weight: 600;
+  color: #18181B;
+}
+
+.lqf-prep-dish-name {
+  font-size: 12px;
+  color: #52525B;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lqf-prep-progress-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lqf-prep-track {
+  flex: 1;
+  height: 4px;
+  background-color: #F4F4F5;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.lqf-prep-fill {
+  height: 100%;
+  background-color: #2563EB;
+  border-radius: 2px;
+  transition: width 120ms ease;
+}
+
+.lqf-prep-ticks {
+  font-size: 11px;
+  color: #71717A;
+  white-space: nowrap;
+  font-family: var(--font-mono, monospace);
+}
+
+/* --------------------------------------------------------------------------
+   Stage 4: Complete Content
+   -------------------------------------------------------------------------- */
+.lqf-complete-compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lqf-complete-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.lqf-complete-row.is-active-event {
+  background-color: #F0FDF4;
+}
+
+.lqf-complete-id {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 500;
+  color: #18181B;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lqf-complete-badge {
+  font-size: 10px;
+  font-weight: 500;
+  color: #16A34A;
+  background-color: #F0FDF4;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   5. Quiet Footer (Latest Event Explanation)
+   -------------------------------------------------------------------------- */
+.lqf-footer {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #F4F4F5;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lqf-footer-main {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.lqf-event-heading {
+  font-size: 11px;
+  font-weight: 600;
+  color: #71717A;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.lqf-event-text {
+  font-size: 12px;
+  color: #27272A;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lqf-details-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: #2563EB;
+  cursor: pointer;
+  text-decoration: underline;
+  flex-shrink: 0;
+}
+
+.lqf-details-btn:hover {
+  color: #1D4ED8;
+}
+
+.lqf-details-btn:focus-visible {
+  outline: 2px solid #18181B;
+  outline-offset: 1px;
+}
+
+.lqf-tech-breakdown {
+  margin-top: 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: #71717A;
+  background-color: #FAFAFA;
+  border: 1px solid #F4F4F5;
+  border-radius: 4px;
+  padding: 5px 8px;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   6. Responsive Behavior (Mobile & Tablet)
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .live-queue-flow-section {
+    margin-bottom: 84px;
+    padding: 14px 16px;
+  }
+
+  .lqf-track-container {
+    display: none;
+  }
+
+  .lqf-mobile-stage-head {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .lqf-mobile-stage-num {
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+    font-weight: 600;
+    color: #A1A1AA;
+  }
+
+  .lqf-mobile-stage-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #52525B;
+    letter-spacing: 0.04em;
+  }
+
+  .lqf-stages-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .lqf-stage-col {
+    padding-bottom: 12px;
+    border-bottom: 1px solid #F4F4F5;
+  }
+
+  .lqf-stage-col:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. Reduced Motion
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .lqf-prep-fill,
+  .lqf-queue-ticket,
+  .lqf-proc-row,
+  .lqf-collapse-btn,
+  .lqf-node-dot {
+    transition: none !important;
+  }
+}

@@ -1,27 +1,27 @@
-import { CATEGORIES } from '../data/menuItems';
+const CATEGORIES = ['All', 'Breakfast', 'Meals', 'Snacks', 'Beverages'];
 
 export default function CategoryChips({ selectedCategory, onSelectCategory }) {
   return (
     <div
-      className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1"
+      className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5"
       role="tablist"
-      aria-label="Food Categories"
+      aria-label="Menu categories"
     >
-      {CATEGORIES.map((category) => {
-        const isSelected = selectedCategory === category;
+      {CATEGORIES.map((cat) => {
+        const isSelected = selectedCategory === cat;
         return (
           <button
-            key={category}
-            onClick={() => onSelectCategory(category)}
+            key={cat}
             role="tab"
             aria-selected={isSelected}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors border focus:outline-none ${
+            onClick={() => onSelectCategory(cat)}
+            className={`h-7 px-3 rounded-md text-xs font-medium transition-all shrink-0 cursor-pointer ${
               isSelected
-                ? 'bg-[#111111] text-white border-[#111111]'
-                : 'bg-white text-[#6B6B6B] border-[#E5E2DD] hover:border-[#111111] hover:text-[#111111]'
+                ? 'bg-[#194D40] text-white font-semibold shadow-2xs'
+                : 'bg-white text-[#5A615B] border border-[#E7E3D9] hover:bg-[#FAF8F3] hover:text-[#252A27]'
             }`}
           >
-            {category}
+            {cat}
           </button>
         );
       })}

@@ -10,6 +10,12 @@ import {
 } from './canteenActions';
 import { BUFFER_CAPACITY } from './canteenInvariants';
 import { MENU_ITEMS } from '../data/menuItems';
+import {
+  createOrderTeachingSnapshot,
+  saveTeachingSnapshot,
+  getTeachingSnapshot,
+  clearTeachingSnapshot,
+} from './orderSnapshotAdapter';
 
 export function useCanteenQueue() {
   const [state, dispatch] = useReducer(canteenReducer, INITIAL_STATE);
@@ -17,11 +23,22 @@ export function useCanteenQueue() {
   // Cart state: Map of itemId -> quantity
   const [cart, setCart] = useState({});
   // Active navigation tab: 'menu' | 'orders' | 'kitchen' | 'synclab'
-  const [activeTab, setActiveTab] = useState('menu');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam && ['menu', 'orders', 'kitchen', 'synclab'].includes(tabParam)) {
+        return tabParam;
+      }
+    }
+    return 'menu';
+  });
   // Selected order for live tracking screen
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   // Toast notifications: array of { id, type: 'success' | 'danger' | 'info', message }
   const [toasts, setToasts] = useState([]);
+  // Teaching order snapshot adapted for Sync Lab
+  const [teachingSnapshot, setTeachingSnapshot] = useState(() => getTeachingSnapshot());
 
   const addToast = useCallback((message, type = 'info') => {
     const toastId = Date.now() + Math.random();
@@ -221,8 +238,40 @@ export function useCanteenQueue() {
     dispatch(resetAction());
     clearCart();
     setSelectedOrderId(null);
+    clearTeachingSnapshot();
+    setTeachingSnapshot(null);
     addToast('Simulation completely reset to initial state (ORD101, empty=5).', 'info');
   }, [clearCart, addToast]);
+
+  // Teaching handoff: adapt real order to Sync Lab snapshot
+  const openSyncLabForOrder = useCallback((order) => {
+    if (!order) return;
+    const snapshot = createOrderTeachingSnapshot(order);
+    if (!snapshot) return;
+    saveTeachingSnapshot(snapshot);
+    setTeachingSnapshot(snapshot);
+    setActiveTab('synclab');
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/app?tab=synclab');
+    }
+    addToast(`Adapted ${snapshot.sourceOrderId} for OS Sync Lab simulation`, 'info');
+  }, [addToast]);
+
+  // Return from Sync Lab to active order in Orders tracking
+  const returnToOrder = useCallback(() => {
+    if (teachingSnapshot?.sourceOrderId) {
+      setSelectedOrderId(teachingSnapshot.sourceOrderId);
+    }
+    setActiveTab('orders');
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/app?tab=orders');
+    }
+  }, [teachingSnapshot]);
+
+  const clearTeachingSnapshotState = useCallback(() => {
+    clearTeachingSnapshot();
+    setTeachingSnapshot(null);
+  }, []);
 
   // Derived tracking order
   const currentTrackingOrder = useMemo(() => {
@@ -264,6 +313,10 @@ export function useCanteenQueue() {
     selectedOrderId,
     setSelectedOrderId,
     currentTrackingOrder,
+    teachingSnapshot,
+    openSyncLabForOrder,
+    returnToOrder,
+    clearTeachingSnapshotState,
     toasts,
     removeToast,
     addToast,

@@ -1,4 +1,4 @@
-import { Check, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Check, AlertTriangle, CheckCircle2, Cpu, ArrowRight } from 'lucide-react';
 
 const LIFECYCLE_STAGES = [
   { key: 'BLOCKED', label: 'Order Placed (Waiting for Queue Capacity)', desc: 'Buffer full (5/5). Waiting in FIFO line.' },
@@ -8,15 +8,15 @@ const LIFECYCLE_STAGES = [
   { key: 'COMPLETED', label: 'Order Collected', desc: 'Picked up by student.' },
 ];
 
-export default function OrderTimeline({ order, queuePosition = null }) {
+export default function OrderTimeline({ order, queuePosition = null, onUnderstandInSyncLab = null }) {
   if (!order) {
     return (
-      <div className="bg-white border border-[#E5E2DD] rounded-xl p-16 text-center">
-        <p className="font-mono text-xs text-[#6B6B6B]">
-          — nothing here yet —
+      <div className="canteo-panel p-16 text-center">
+        <p className="font-mono text-xs text-[#747B75]">
+          — no active order selected —
         </p>
-        <p className="text-xs text-[#8C8C8C] mt-2 max-w-sm mx-auto">
-          Submit an order from the menu to observe live queue lifecycle tracking.
+        <p className="text-xs text-[#747B75] mt-2 max-w-sm mx-auto">
+          Submit an order from the menu or select an order from the switcher above to observe live queue lifecycle tracking.
         </p>
       </div>
     );
@@ -24,6 +24,7 @@ export default function OrderTimeline({ order, queuePosition = null }) {
 
   const isBlocked = order.status === 'BLOCKED';
   const isReady = order.status === 'READY';
+  const isPreparing = order.status === 'PREPARING';
 
   // Determine stage progression
   const getStageState = (stageKey) => {
@@ -48,9 +49,9 @@ export default function OrderTimeline({ order, queuePosition = null }) {
   return (
     <div className="space-y-6 text-left">
       {/* Schematic Route Map (Inline SVG) */}
-      <div className="relative w-full h-40 sm:h-48 bg-[#FAF7F2] rounded-xl border border-[#E5E2DD] overflow-hidden p-2">
+      <div className="relative w-full h-40 sm:h-48 bg-[#FAF8F3] rounded-xl border border-[#E7E3D9] overflow-hidden p-2">
         <svg
-          className="w-full h-full text-[#E5E2DD]"
+          className="w-full h-full text-[#E7E3D9]"
           viewBox="0 0 500 160"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -63,51 +64,51 @@ export default function OrderTimeline({ order, queuePosition = null }) {
           <line x1="350" y1="0" x2="350" y2="160" stroke="currentColor" strokeDasharray="3 3" />
           <line x1="450" y1="0" x2="450" y2="160" stroke="currentColor" strokeDasharray="3 3" />
 
-          {/* Campus Path Route in Warm Amber */}
+          {/* Campus Path Route in Forest Green */}
           <path
             d="M 60 80 Q 180 30 250 80 T 440 80"
-            stroke="#D97706"
+            stroke="#194D40"
             strokeWidth="2.5"
             strokeLinecap="round"
             fill="none"
           />
 
           {/* Canteen Node */}
-          <circle cx="60" cy="80" r="10" fill="#111111" />
+          <circle cx="60" cy="80" r="10" fill="#123A32" />
           <circle cx="60" cy="80" r="4" fill="white" />
-          <text x="60" y="112" textAnchor="middle" className="text-[10px] font-mono fill-[#111111]">
+          <text x="60" y="112" textAnchor="middle" className="text-[10px] font-mono fill-[#123A32] font-semibold">
             Canteen
           </text>
 
           {/* Counter 2 Pickup Node */}
-          <circle cx="250" cy="80" r="8" fill={isReady ? '#D97706' : '#6B6B6B'} />
+          <circle cx="250" cy="80" r="8" fill={isReady ? '#2E7D5B' : isPreparing ? '#C69A52' : '#747B75'} />
           <circle cx="250" cy="80" r="3" fill="white" />
-          <text x="250" y="112" textAnchor="middle" className="text-[10px] font-mono fill-[#6B6B6B]">
+          <text x="250" y="112" textAnchor="middle" className="text-[10px] font-mono fill-[#747B75] font-medium">
             Counter 2
           </text>
 
           {/* Destination / Student Node */}
-          <circle cx="440" cy="80" r="10" fill="#D97706" />
+          <circle cx="440" cy="80" r="10" fill="#C69A52" />
           <circle cx="440" cy="80" r="4" fill="white" />
-          <text x="440" y="112" textAnchor="middle" className="text-[10px] font-mono fill-[#D97706]">
+          <text x="440" y="112" textAnchor="middle" className="text-[10px] font-mono fill-[#C69A52] font-semibold">
             You
           </text>
         </svg>
 
-        <div className="absolute bottom-2 left-3 text-[10px] font-mono text-[#6B6B6B]">
+        <div className="absolute bottom-2 left-3 text-[10px] font-mono text-[#747B75]">
           Schematic Campus Route · Food Pickup at Counter 2
         </div>
       </div>
 
       {/* Blocked Queue Alert Banner */}
       {isBlocked && (
-        <div className="p-4 bg-[#FAF7F2] border border-[#C0392B] rounded-xl flex items-start gap-3">
-          <AlertTriangle className="w-4 h-4 text-[#C0392B] shrink-0 mt-0.5" />
+        <div className="p-4 bg-[#FDF1EF] border border-[#F6CBC5] rounded-xl flex items-start gap-3">
+          <AlertTriangle className="w-4 h-4 text-[#BA3C2A] shrink-0 mt-0.5" />
           <div className="text-xs">
-            <span className="font-semibold text-[#C0392B] block">
+            <span className="font-semibold text-[#BA3C2A] block">
               Buffer Full (5/5 Orders Queued)
             </span>
-            <p className="text-[#5E5E5E] mt-0.5 leading-relaxed">
+            <p className="text-[#252A27] mt-0.5 leading-relaxed">
               Your order is held in the FIFO blocked queue. It will be admitted to the kitchen buffer the instant staff completes a prep slot.
             </p>
           </div>
@@ -116,13 +117,13 @@ export default function OrderTimeline({ order, queuePosition = null }) {
 
       {/* Ready Alert Banner */}
       {isReady && (
-        <div className="p-4 bg-[#FAF7F2] border border-[#D97706] rounded-xl flex items-start gap-3">
-          <CheckCircle2 className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+        <div className="p-4 bg-[#EDF7F2] border border-[#BCE4D0] rounded-xl flex items-start gap-3">
+          <CheckCircle2 className="w-4 h-4 text-[#2E7D5B] shrink-0 mt-0.5" />
           <div className="text-xs">
-            <span className="font-semibold text-[#D97706] block">
+            <span className="font-semibold text-[#2E7D5B] block">
               Your food is ready — collect at Counter 2.
             </span>
-            <p className="text-[#5E5E5E] mt-0.5">
+            <p className="text-[#252A27] mt-0.5">
               Please present your order ID ({order.id}) at the counter.
             </p>
           </div>
@@ -130,51 +131,89 @@ export default function OrderTimeline({ order, queuePosition = null }) {
       )}
 
       {/* Active Order Card */}
-      <div className="bg-white border border-[#E5E2DD] rounded-xl p-5 sm:p-6 space-y-6">
+      <div className="canteo-panel p-5 sm:p-6 space-y-6">
         {/* Order Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E5E2DD] gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7E3D9] gap-2">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="font-mono text-xl font-bold text-[#111111]">
+              <span className="font-mono text-xl font-bold text-[#252A27]">
                 {order.id}
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-[#E5E2DD] uppercase tracking-wider text-[#111111]">
+              <span
+                className={`text-[10px] font-mono px-2 py-0.5 rounded-full border uppercase tracking-wider font-bold ${
+                  isReady
+                    ? 'bg-[#EDF7F2] text-[#2E7D5B] border-[#BCE4D0]'
+                    : isPreparing
+                      ? 'bg-[#FCF5EC] text-[#B8782E] border-[#F4DCBE]'
+                      : isBlocked
+                        ? 'bg-[#FDF1EF] text-[#BA3C2A] border-[#F6CBC5]'
+                        : 'bg-[#FAF8F3] text-[#194D40] border-[#E7E3D9]'
+                }`}
+              >
                 {order.status}
               </span>
             </div>
-            <p className="text-xs text-[#6B6B6B] mt-1 font-mono tabular-nums">
+            <p className="text-xs text-[#747B75] mt-1 font-mono tabular-nums">
               Submitted at {order.timestamp} · Total: ₹{order.total}
             </p>
           </div>
 
           {queuePosition && (
-            <div className="text-right bg-[#FAF7F2] px-3 py-1 rounded-md border border-[#E5E2DD] shrink-0 self-start sm:self-auto">
-              <span className="text-[10px] text-[#6B6B6B] uppercase block font-mono">Queue Pos</span>
-              <span className="text-base font-mono font-bold text-[#111111]">#{queuePosition}</span>
+            <div className="text-right bg-[#FAF8F3] px-3.5 py-1.5 rounded-lg border border-[#E7E3D9] shrink-0 self-start sm:self-auto">
+              <span className="text-[10px] text-[#747B75] uppercase block font-mono">Queue Pos</span>
+              <span className="text-base font-mono font-bold text-[#194D40]">#{queuePosition}</span>
             </div>
           )}
         </div>
 
         {/* Ordered items list */}
         <div className="space-y-2">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-[#6B6B6B]">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-[#747B75]">
             Ordered Items
           </span>
-          <div className="divide-y divide-[#F1EFEA]">
+          <div className="divide-y divide-[#E7E3D9]/60">
             {order.items?.map((it, idx) => (
-              <div key={idx} className="py-2 flex items-center justify-between text-xs sm:text-sm tabular-nums">
-                <span className="text-[#111111] font-normal">
+              <div key={idx} className="py-2.5 flex items-center justify-between text-xs sm:text-sm tabular-nums">
+                <span className="text-[#252A27] font-normal">
                   {it.quantity}x {it.name}
                 </span>
-                <span className="text-[#6B6B6B] font-mono">₹{it.subtotal || it.price * it.quantity}</span>
+                <span className="text-[#747B75] font-mono font-medium">₹{it.subtotal || it.price * it.quantity}</span>
               </div>
             ))}
           </div>
         </div>
 
+        {/* Educational Sync Lab Mapping Callout */}
+        {onUnderstandInSyncLab && (
+          <div className="p-4 bg-[#FAF8F3] border border-[#E7E3D9] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+            <div className="space-y-0.5 min-w-0">
+              <div className="flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-[#194D40] shrink-0" />
+                <span className="text-xs font-bold text-[#252A27]">
+                  Understand this order in Sync Lab
+                </span>
+                <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-[#E7E3D9] text-[#194D40] font-semibold">
+                  1 Ticket in Buffer
+                </span>
+              </div>
+              <p className="text-[12px] text-[#747B75] leading-relaxed">
+                See how order <strong>{order.id}</strong> maps to the bounded-buffer producer–consumer synchronization model.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onUnderstandInSyncLab(order)}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-[#E7E3D9] hover:border-[#194D40] text-xs font-semibold text-[#194D40] transition-all shrink-0 cursor-pointer shadow-2xs hover:shadow-xs group"
+            >
+              <span>Understand in Sync Lab</span>
+              <ArrowRight className="w-3.5 h-3.5 text-[#C69A52] group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        )}
+
         {/* Vertical Stepper Timeline */}
-        <div className="pt-4 border-t border-[#E5E2DD]">
-          <h4 className="text-xs font-mono uppercase tracking-wider text-[#6B6B6B] mb-5">
+        <div className="pt-4 border-t border-[#E7E3D9]">
+          <h4 className="text-xs font-mono uppercase tracking-wider text-[#747B75] mb-5">
             Order Lifecycle Timeline
           </h4>
 
@@ -187,8 +226,8 @@ export default function OrderTimeline({ order, queuePosition = null }) {
                 <div key={stage.key} className="flex gap-4 relative">
                   {!isLast && (
                     <div
-                      className={`absolute left-3 top-6 bottom-0 w-[1px] ${
-                        state === 'completed' ? 'bg-[#D97706]' : 'bg-[#E5E2DD]'
+                      className={`absolute left-3 top-6 bottom-0 w-[1.5px] ${
+                        state === 'completed' ? 'bg-[#194D40]' : 'bg-[#E7E3D9]'
                       }`}
                     />
                   )}
@@ -196,16 +235,16 @@ export default function OrderTimeline({ order, queuePosition = null }) {
                   {/* Indicator Dot */}
                   <div className="shrink-0 relative z-10 pt-0.5">
                     {state === 'completed' ? (
-                      <div className="w-6 h-6 rounded-full bg-[#D97706] text-white flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full bg-[#194D40] text-white flex items-center justify-center shadow-2xs">
                         <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                       </div>
                     ) : state === 'current' ? (
-                      <div className="w-6 h-6 rounded-full bg-white border-2 border-[#D97706] flex items-center justify-center">
-                        <span className="w-2 h-2 rounded-full bg-[#D97706] animate-pulse" />
+                      <div className="w-6 h-6 rounded-full bg-white border-2 border-[#C69A52] flex items-center justify-center shadow-2xs">
+                        <span className="w-2 h-2 rounded-full bg-[#C69A52] animate-pulse" />
                       </div>
                     ) : (
-                      <div className="w-6 h-6 rounded-full bg-white border border-[#E5E2DD] flex items-center justify-center">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#E5E2DD]" />
+                      <div className="w-6 h-6 rounded-full bg-white border border-[#E7E3D9] flex items-center justify-center">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#E7E3D9]" />
                       </div>
                     )}
                   </div>
@@ -215,15 +254,15 @@ export default function OrderTimeline({ order, queuePosition = null }) {
                     <div
                       className={`text-xs font-semibold font-body ${
                         state === 'current'
-                          ? 'text-[#111111]'
+                          ? 'text-[#252A27]'
                           : state === 'completed'
-                          ? 'text-[#D97706]'
-                          : 'text-[#8C8C8C]'
+                          ? 'text-[#194D40]'
+                          : 'text-[#747B75]'
                       }`}
                     >
                       {stage.label}
                     </div>
-                    <p className="text-[12px] text-[#6B6B6B] mt-0.5">
+                    <p className="text-[12px] text-[#747B75] mt-0.5">
                       {stage.desc}
                     </p>
                   </div>

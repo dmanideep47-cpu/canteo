@@ -1,0 +1,79 @@
+{
+  "before": {
+    "startUrl": "http://127.0.0.1:5173/",
+    "control": {
+      "text": "Launch Prototype",
+      "tag": "BUTTON",
+      "disabled": false,
+      "rect": {
+        "x": 589.34375,
+        "y": 14,
+        "width": 133.65625,
+        "height": 36
+      },
+      "center": {
+        "x": 656.171875,
+        "y": 32
+      }
+    },
+    "screen": "Canteo\nApps\nPrinciples\nGitHub\nLaunch Prototype\nOS SYNCHRONIZATION PROTOTYPE\nOne canteen.\nEvery order in sync.\n\nCanteo turns a college canteen into a living Operating Systems simulation. Students place orders, the kitchen processes them, and synchronization mechanisms protect the shared queue.\n\nLaunch Prototype\nRead the"
+  },
+  "after": {
+    "url": "http://127.0.0.1:5173/",
+    "screen": "Canteo\nApps\nPrinciples\nGitHub\nLaunch Prototype\nOS SYNCHRONIZATION PROTOTYPE\nOne canteen.\nEvery order in sync.\n\nCanteo turns a college canteen into a living Operating Systems simulation. Students place orders, the kitchen processes them, and synchronization mechanisms protect the shared queue.\n\nLaunch Prototype\nRead the case study →\nMASALA DOSA · ₹40\nQUEUE READY\nEXPLORE\nPick a view to explore.\n01\nStudent App\n\nBrowse t",
+    "title": "Canteo — College Canteen Ordering & Live Queue Tracking"
+  },
+  "runtimeErrors": [
+    "TypeError: onNavigateToApp is not a function\n    at onLaunchPrototype (http://127.0.0.1:5173/src/landing/LandingPage.jsx:18:63)\n    at onClick (http://127.0.0.1:5173/src/landing/components/Navbar.jsx:67:21)\n    at executeDispatch (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=caa2435b:9903:5)\n    at runWithFiberInDEV (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=caa2435b:941:66)\n    at processDispatchQueue (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=caa2435b:9929:27)\n    at http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=caa2435b:10198:5\n    at batchedUpdates$1 (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=caa2435b:2142:12)\n    at dispatchEventForPluginEventSystem (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=caa2435b:10002:4)\n    at dispatchEvent (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=caa2435b:12510:29)\n    at dispatchDiscreteEvent (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=caa2435b:12492:56)"
+  ],
+  "recentResponses": [
+    {
+      "url": "http://127.0.0.1:5173/src/synclab/engine/Mutex.js",
+      "status": 304
+    },
+    {
+      "url": "http://127.0.0.1:5173/src/synclab/RaceConditionDemo.js?t=1793604554729",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/src/synclab/raceLab.css?t=1793604403491",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/src/synclab/flowchartData.js?t=1793591755699",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/src/synclab/educationalSchedules.js",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/node_modules/.vite/deps/lucide-react.js?v=caa2435b",
+      "status": 200
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=800&auto=format&fit=crop&q=80",
+      "status": 200
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+      "status": 200
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/instrumentserif/v5/jizBRFtNs2ka5fXjeivQ4LroWlx-6zUTjg.woff2",
+      "status": 200
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2",
+      "status": 200
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/instrumentserif/v5/jizHRFtNs2ka5fXjeivQ4LroWlx-6zAjjH7M.woff2",
+      "status": 200
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwhsk.woff2",
+      "status": 200
+    }
+  ]
+}

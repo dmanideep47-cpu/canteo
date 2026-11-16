@@ -43,6 +43,7 @@ export default function HeroSection({ onLaunchPrototype, onOpenCaseStudy }) {
             <div className="flex flex-wrap items-center gap-6">
               <button
                 onClick={() => onLaunchPrototype()}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onLaunchPrototype(); } }}
                 className="btn-editorial-primary"
                 aria-label="Launch Prototype"
               >

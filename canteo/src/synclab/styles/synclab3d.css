@@ -1,0 +1,181 @@
+/* synclab3d.css - 3D Simulation Page Styles */
+
+.synclab-3d-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: var(--space-16, 16px);
+  padding: 0 var(--space-24, 24px) var(--space-48, 48px);
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* 3D Viewport Header & Camera Bar */
+.synclab-3d-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-12, 12px);
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-12, 12px) var(--space-16, 16px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.synclab-3d-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.synclab-3d-heading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.synclab-3d-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: #64748B;
+}
+
+.synclab-3d-camera-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.synclab-3d-btn {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 120ms ease;
+}
+
+.synclab-3d-btn:hover {
+  background: #F8FAFC;
+  border-color: #94A3B8;
+  color: #0F172A;
+}
+
+.synclab-3d-btn.active {
+  background: #0F172A;
+  border-color: #0F172A;
+  color: #FFFFFF;
+}
+
+/* 3D Canvas Stage Container */
+.synclab-3d-canvas-container {
+  width: 100%;
+  height: 580px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md, 8px);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 900px) {
+  .synclab-3d-canvas-container {
+    height: 480px;
+  }
+}
+
+@media (max-width: 640px) {
+  .synclab-3d-canvas-container {
+    height: 400px;
+  }
+}
+
+/* Overlay Hint in Canvas */
+.synclab-3d-canvas-hint {
+  position: absolute;
+  bottom: 12px;
+  right: 14px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(4px);
+  border: 1px solid #CBD5E1;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #475569;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* 3D Legend Bar */
+.synclab-3d-legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-12, 12px);
+  margin-top: var(--space-8, 8px);
+}
+
+.synclab-3d-legend-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.synclab-3d-legend-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.synclab-3d-legend-desc {
+  font-size: 11px;
+  color: #64748B;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Accessible Data Table */
+.synclab-3d-accessible-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 8px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.synclab-3d-accessible-table th {
+  background: #F8FAFC;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.synclab-3d-accessible-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #F1F5F9;
+  color: #1E293B;
+}

@@ -1,0 +1,74 @@
+/* ==========================================================================
+   CANTEO SYNCLAB 2.0 DESIGN SYSTEM TOKENS
+   Refined 60% White / 40% Black Visual Language
+   Linear / Stripe / Vercel Developer Tool Aesthetic
+   ========================================================================== */
+
+:root {
+  /* White Canvas Tones (60% Dominant Canvas) */
+  --white-0: #FFFFFF;
+  --white-100: #FAFAFA;
+  --white-200: #F5F5F7;
+  --white-300: #EDEDF0;
+  --white-400: #E2E2E7;
+
+  /* Structural Black Tones (40% Structural & Technical Surfaces) */
+  --black-950: #08080A;
+  --black-900: #101013;
+  --black-800: #17171B;
+  --black-700: #212127;
+  --black-600: #2E2E36;
+  --black-500: #4A4A54;
+  --black-400: #6E6E78;
+  --black-300: #9A9AA4;
+
+  /* Semantic Concurrency Accents (Meaningful, Not Decorative) */
+  --producer: #1D4ED8;        /* Royal Blue - Student Producers */
+  --producer-bg: #EFF6FF;
+  --producer-border: #BFDBFE;
+  
+  --consumer: #047857;        /* Emerald Green - Kitchen Consumers */
+  --consumer-bg: #ECFDF5;
+  --consumer-border: #A7F3D0;
+  
+  --waiting: #B45309;         /* Warm Amber - Blocked on Semaphores */
+  --waiting-bg: #FFFBEB;
+  --waiting-border: #FDE68A;
+  
+  --critical: #6D28D9;        /* Deep Violet - Critical Section / Mutex Held */
+  --critical-bg: #F5F3FF;
+  --critical-border: #DDD6FE;
+  
+  --error: #B91C1C;           /* Crimson Red - Race Condition Faults */
+  --error-bg: #FEF2F2;
+  --error-border: #FECACA;
+  
+  --success: #047857;         /* Mint Success */
+  --brand: #101013;           /* Dark Structural Brand */
+
+  /* Typography */
+  --font-serif: "Instrument Serif", "Newsreader", "Fraunces", Georgia, serif;
+  --font-sans: "Inter", "Geist", "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono", "IBM Plex Mono", Menlo, Consolas, monospace;
+
+  /* Elevations & Borders */
+  --border-light: 1px solid var(--white-400);
+  --border-subtle: 1px solid var(--white-300);
+  --border-dark: 1px solid var(--black-700);
+  --border-darker: 1px solid var(--black-600);
+  
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+
+  --shadow-sm: 0 1px 2px rgba(8, 8, 10, 0.04);
+  --shadow-md: 0 4px 12px rgba(8, 8, 10, 0.06);
+  --shadow-lg: 0 10px 25px rgba(8, 8, 10, 0.09);
+  --shadow-dark: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+  /* Transitions */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+

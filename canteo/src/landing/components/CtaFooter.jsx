@@ -33,6 +33,7 @@ export default function CtaFooter({ onLaunchPrototype }) {
 
           <button
             onClick={() => onLaunchPrototype()}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onLaunchPrototype(); } }}
             className="btn-editorial-primary"
             aria-label="Launch Prototype"
           >

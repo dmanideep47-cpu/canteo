@@ -1,0 +1,61 @@
+import { writeFile } from 'node:fs/promises';
+
+const browserBase = 'http://127.0.0.1:9333';
+const browserInfo = await (await fetch(`${browserBase}/json/version`)).json();
+const browserSocket = new WebSocket(browserInfo.webSocketDebuggerUrl);
+await new Promise((resolve, reject) => { browserSocket.onopen = resolve; browserSocket.onerror = reject; });
+let browserId = 0;
+const browserPending = new Map();
+browserSocket.onmessage = ({ data }) => {
+  const message = JSON.parse(data);
+  const request = browserPending.get(message.id);
+  if (!request) return;
+  browserPending.delete(message.id);
+  if (message.error) request.reject(new Error(message.error.message)); else request.resolve(message.result);
+};
+const browserCall = (method, params = {}) => new Promise((resolve, reject) => {
+  const id = ++browserId; browserPending.set(id, { resolve, reject });
+  browserSocket.send(JSON.stringify({ id, method, params }));
+});
+await browserCall('Target.createTarget', { url: 'http://127.0.0.1:5173/' });
+await new Promise((resolve) => setTimeout(resolve, 350));
+const target = (await (await fetch(`${browserBase}/json/list`)).json()).find((page) => page.type === 'page' && page.url === 'http://127.0.0.1:5173/');
+if (!target) throw new Error('Landing page target missing.');
+const page = new WebSocket(target.webSocketDebuggerUrl);
+await new Promise((resolve, reject) => { page.onopen = resolve; page.onerror = reject; });
+let id = 0;
+const pending = new Map();
+const runtimeErrors = [];
+const responses = [];
+page.onmessage = ({ data }) => {
+  const message = JSON.parse(data);
+  if (message.method === 'Runtime.exceptionThrown') runtimeErrors.push(message.params.exceptionDetails.exception?.description ?? message.params.exceptionDetails.text);
+  if (message.method === 'Runtime.consoleAPICalled' && message.params.type === 'error') runtimeErrors.push(message.params.args.map((arg) => arg.value ?? arg.description).join(' '));
+  if (message.method === 'Network.responseReceived') responses.push({ url: message.params.response.url, status: message.params.response.status });
+  const request = pending.get(message.id);
+  if (!request) return;
+  pending.delete(message.id);
+  if (message.error) request.reject(new Error(message.error.message)); else request.resolve(message.result);
+};
+const call = (method, params = {}) => new Promise((resolve, reject) => {
+  const requestId = ++id; pending.set(requestId, { resolve, reject });
+  page.send(JSON.stringify({ id: requestId, method, params }));
+});
+const evaluate = async (expression) => (await call('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result.value;
+await call('Page.enable'); await call('Runtime.enable'); await call('Network.enable');
+await call('Page.navigate', { url: 'http://127.0.0.1:5173/' });
+await new Promise((resolve) => setTimeout(resolve, 1300));
+const button = await evaluate('(()=>{const e=[...document.querySelectorAll("button")].find(x=>x.innerText.trim()==="Launch Prototype");if(!e)return null;const r=e.getBoundingClientRect();return {text:e.innerText.trim(),tag:e.tagName,disabled:e.disabled,rect:{x:r.x,y:r.y,width:r.width,height:r.height},center:{x:r.x+r.width/2,y:r.y+r.height/2}}})()');
+if (!button) throw new Error('Visible Launch Prototype button not found.');
+const before = { startUrl: await evaluate('location.href'), control: button, screen: await evaluate('document.body.innerText.slice(0,320)') };
+const image = await call('Page.captureScreenshot', { format: 'png', fromSurface: true });
+await writeFile(new URL('./landing-before.png', import.meta.url), Buffer.from(image.data, 'base64'));
+await call('Input.dispatchMouseEvent', { type: 'mouseMoved', x: button.center.x, y: button.center.y });
+await call('Input.dispatchMouseEvent', { type: 'mousePressed', x: button.center.x, y: button.center.y, button: 'left', clickCount: 1 });
+await call('Input.dispatchMouseEvent', { type: 'mouseReleased', x: button.center.x, y: button.center.y, button: 'left', clickCount: 1 });
+await new Promise((resolve) => setTimeout(resolve, 1000));
+const after = { url: await evaluate('location.href'), screen: await evaluate('document.body.innerText.slice(0,420)'), title: await evaluate('document.title') };
+const evidence = { before, after, runtimeErrors, recentResponses: responses.slice(-12) };
+await writeFile(new URL('./repro-before-fix.json', import.meta.url), JSON.stringify(evidence, null, 2));
+console.log(JSON.stringify(evidence, null, 2));
+page.close(); browserSocket.close();

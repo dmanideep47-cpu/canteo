@@ -5,7 +5,7 @@ import SearchBar from '../components/SearchBar';
 import CategoryChips from '../components/CategoryChips';
 import FoodCard from '../components/FoodCard';
 import CartSheet from '../components/CartSheet';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ShoppingBag, AlertTriangle } from 'lucide-react';
 
 export default function MenuScreen() {
   const {
@@ -23,7 +23,6 @@ export default function MenuScreen() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Search and Category filters working together
   const filteredItems = useMemo(() => {
     return MENU_ITEMS.filter((item) => {
       const matchesCategory =
@@ -36,47 +35,81 @@ export default function MenuScreen() {
   }, [searchQuery, selectedCategory]);
 
   return (
-    <div className="p-6 lg:p-8 space-y-6 max-w-full text-left">
-      {/* Header with Title and Queue Slot Badge */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5E2DD]">
+    <div className="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto text-left">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-[#E7E3D9]">
         <div>
-          <h1 className="text-2xl font-semibold font-body text-[#111111] tracking-tight">
-            Menu
+          <h1 className="text-2xl lg:text-3xl font-semibold font-body text-[#181A19] tracking-tight">
+            Canteen Menu
           </h1>
-          <p className="text-xs text-[#5E5E5E] font-normal mt-0.5">
-            Producer process: select items to submit orders into the 5-slot bounded buffer.
+          <p className="text-xs text-[#6B726C] mt-1 max-w-2xl leading-relaxed">
+            Fresh campus meals prepared to order in strict FIFO sequence.
           </p>
         </div>
 
-        {/* Live Queue Slot Badge: Minimal hairline pill */}
-        <div className="flex items-center gap-2 bg-white border border-[#E5E2DD] px-3 py-1 rounded-full text-xs font-mono shrink-0 self-start sm:self-auto tabular-nums">
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              state.empty === 0 ? 'bg-[#C0392B] animate-pulse' : 'bg-[#D97706]'
-            }`}
-          />
-          <span className="font-medium text-[#111111]">{state.empty}/5</span>
-          <span className="text-[#6B6B6B]">slots free</span>
+        {/* Bounded Queue Capacity Card */}
+        <div className="bg-white border border-[#E5E2DA] p-3 rounded-xl flex items-center gap-4 shrink-0 shadow-2xs">
+          <div className="text-left font-mono">
+            <div className="text-[10px] text-[#6B726C]">Queue Capacity</div>
+            <div className="text-base font-bold text-[#181A19] tabular-nums mt-0.5">
+              {state.empty} <span className="text-xs font-normal text-[#6B726C]">of 5 slots free</span>
+            </div>
+          </div>
+          <div className="h-8 w-px bg-[#E5E2DA]" />
+          <div className="flex items-center gap-1.5 font-mono text-xs">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                state.empty === 0 ? 'bg-[#B91C1C]' : 'bg-[#15803D]'
+              }`}
+            />
+            <span className="text-[11px] font-semibold text-[#181A19]">
+              {state.empty === 0 ? 'Queue Full' : 'Available'}
+            </span>
+          </div>
         </div>
-      </header>
+      </div>
+
+      {/* Capacity Warning Banner when Full */}
+      {state.empty === 0 && (
+        <div className="p-3.5 bg-[#FEF3C7] border border-[#FDE68A] rounded-xl flex items-center justify-between gap-3 text-xs text-[#B45309]">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-[#B45309]" />
+            <span>
+              <strong>Queue is currently at maximum capacity (5/5 orders active).</strong> New orders will be queued as soon as kitchen staff take an order from the buffer.
+            </span>
+          </div>
+          <span className="font-mono text-[10px] bg-white border border-[#FDE68A] px-2 py-0.5 rounded font-bold shrink-0 text-[#B45309]">
+            sem_wait(&amp;empty)
+          </span>
+        </div>
+      )}
 
       {/* Search and Category Filters */}
-      <section className="space-y-4" aria-label="Menu Filters">
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
+      <section className="space-y-3.5" aria-label="Menu Filters">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+          <div className="text-xs font-mono text-[#747B75] self-end sm:self-auto">
+            Showing {filteredItems.length} of {MENU_ITEMS.length} dishes
+          </div>
+        </div>
         <CategoryChips
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
         />
       </section>
 
-      {/* Multi-Column Food Grid: 1 col on mobile, 2 col on tablet, 3 on desktop */}
+      {/* Multi-Column Food Grid */}
       <main aria-label="Food Products">
         {filteredItems.length === 0 ? (
-          <div className="py-24 text-center font-mono text-xs text-[#6B6B6B]">
-            — nothing here yet —
+          <div className="py-20 text-center font-mono text-xs text-[#747B75] bg-white rounded-xl border border-[#E7E3D9] p-8 max-w-md mx-auto">
+            <ShoppingBag className="w-8 h-8 text-[#C69A52] mx-auto mb-2 opacity-70" />
+            <p className="text-sm font-semibold text-[#252A27] font-body">No matching food items</p>
+            <p className="text-xs text-[#747B75] mt-1 font-body">
+              Try adjusting your search query or switching categories.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
             {filteredItems.map((item) => {
               const qty = cart[item.id] ? cart[item.id].quantity : 0;
               return (
@@ -93,17 +126,17 @@ export default function MenuScreen() {
         )}
       </main>
 
-      {/* Floating Bottom Cart Bar: Black pill with subtle shadow-lg */}
+      {/* Floating Bottom Cart Bar */}
       {cartCount > 0 && (
         <div className="fixed bottom-20 lg:bottom-8 left-0 right-0 z-30 px-4 pointer-events-none">
-          <div className="max-w-[460px] mx-auto pointer-events-auto">
+          <div className="max-w-md mx-auto pointer-events-auto">
             <button
               onClick={() => setIsCartOpen(true)}
-              className="w-full h-12 bg-[#111111] text-white px-5 rounded-full shadow-lg flex items-center justify-between hover:bg-[#1A1A1A] transition-colors active:scale-[0.99] focus:outline-none"
+              className="w-full h-12 bg-[#194D40] hover:bg-[#123A32] text-white px-5 rounded-xl shadow-lg flex items-center justify-between transition-all active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-[#C69A52] cursor-pointer border border-[#154237]"
               aria-label="View Cart"
             >
               <div className="flex items-center gap-2.5 text-xs font-medium tabular-nums">
-                <span className="w-5 h-5 rounded-full bg-[#D97706] text-white flex items-center justify-center text-[10px] font-mono">
+                <span className="w-5 h-5 rounded-md bg-[#C69A52] text-white flex items-center justify-center text-[10px] font-mono font-bold">
                   {cartCount}
                 </span>
                 <span>
@@ -112,8 +145,8 @@ export default function MenuScreen() {
               </div>
 
               <div className="flex items-center gap-1.5 text-xs font-medium text-white">
-                <span>View Cart</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span>Review &amp; Place Order</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#C69A52]" />
               </div>
             </button>
           </div>

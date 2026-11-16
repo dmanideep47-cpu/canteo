@@ -7,15 +7,18 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "node --test test/canteenReducer.test.js test/raceConditionReducer.test.js",
+    "test": "node --test test/canteenReducer.test.js test/raceConditionReducer.test.js test/syncLabEngine.test.js test/comparisonEngine.test.js test/consolidated3DApparatus.test.js test/workloadBackpressure.test.js test/syncLabIntroAndNavigation.test.js test/orderHandoffAndSyncLab.test.js test/caseStudySyncLab.test.js test/simulationEngineStage2.test.js test/staticSplitScreenStage2.test.js test/stage2NormalFlow.test.js test/stage3FullEmptyQueue.test.js test/producerConsumerV2Engine.test.js test/synclabV2Learning.test.js test/synclabScenarios.test.js test/synclabIntegrityEvidence.test.js test/persistentKitchenEngine.test.js test/multiConsumerSync.test.js test/preparationProgressUI.test.js test/educationalPages.test.js test/flowchartsView.test.js test/executionAnalysis.test.js test/classroomWorkbench.test.js test/canteenRush.test.js test/multiConsumerRegression.test.js test/workflowAndRemoval.test.js test/ordinaryWorkflowRegression.test.js test/stepperAndRemovalLifecycle.test.js test/understandingAndControlsEnhancement.test.js test/finalAcceptancePass.test.js test/liveQueueFlow.test.js test/simulationSceneAdapter.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
     "@tailwindcss/vite": "^4.3.3",
     "lucide-react": "^1.61.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

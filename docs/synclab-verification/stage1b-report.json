@@ -1,0 +1,98 @@
+[
+  {
+    "configName": "1440x900-expanded",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "stage": {
+      "width": 1132,
+      "height": 580
+    },
+    "measurements": {
+      "canvasCssMatchesStage": true,
+      "stageWidthCoveragePct": 88,
+      "stageHeightCoveragePct": 81,
+      "topBlankBandPct": 10.9,
+      "bottomBlankBandPct": 8.1,
+      "maxFloorExtendPct": 4.4,
+      "allLabelsAtLeast12px": true,
+      "intersectingLabelPairs": [],
+      "slotsLeftToRightOrder": true,
+      "cameraResetDelta": 0
+    },
+    "passedAllCriteria": true
+  },
+  {
+    "configName": "1440x900-collapsed",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "stage": {
+      "width": 1328,
+      "height": 600
+    },
+    "measurements": {
+      "canvasCssMatchesStage": true,
+      "stageWidthCoveragePct": 77.6,
+      "stageHeightCoveragePct": 80.9,
+      "topBlankBandPct": 11,
+      "bottomBlankBandPct": 8.1,
+      "maxFloorExtendPct": 4.4,
+      "allLabelsAtLeast12px": true,
+      "intersectingLabelPairs": [],
+      "slotsLeftToRightOrder": true,
+      "cameraResetDelta": 0
+    },
+    "passedAllCriteria": true
+  },
+  {
+    "configName": "1280x720-expanded",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "stage": {
+      "width": 972,
+      "height": 480
+    },
+    "measurements": {
+      "canvasCssMatchesStage": true,
+      "stageWidthCoveragePct": 84.8,
+      "stageHeightCoveragePct": 81.3,
+      "topBlankBandPct": 10.6,
+      "bottomBlankBandPct": 8.1,
+      "maxFloorExtendPct": 4.4,
+      "allLabelsAtLeast12px": true,
+      "intersectingLabelPairs": [],
+      "slotsLeftToRightOrder": true,
+      "cameraResetDelta": 0
+    },
+    "passedAllCriteria": true
+  },
+  {
+    "configName": "1280x720-collapsed",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "stage": {
+      "width": 1168,
+      "height": 500
+    },
+    "measurements": {
+      "canvasCssMatchesStage": true,
+      "stageWidthCoveragePct": 73.5,
+      "stageHeightCoveragePct": 81.2,
+      "topBlankBandPct": 10.7,
+      "bottomBlankBandPct": 8.1,
+      "maxFloorExtendPct": 4.4,
+      "allLabelsAtLeast12px": true,
+      "intersectingLabelPairs": [],
+      "slotsLeftToRightOrder": true,
+      "cameraResetDelta": 0
+    },
+    "passedAllCriteria": true
+  }
+]
