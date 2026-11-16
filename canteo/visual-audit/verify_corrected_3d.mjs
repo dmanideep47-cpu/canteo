@@ -69,7 +69,7 @@ async function runCorrected3DVerification() {
   await call('DOM.enable');
   await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1050, deviceScaleFactor: 1, mobile: false });
 
-  await call('Page.navigate', { url: 'http://localhost:5173/app?tab=synclab' });
+  await call('Page.navigate', { url: 'http://127.0.0.1:5173/app?tab=synclab' });
 
   for (let i = 0; i < 25; i++) {
     await wait(300);

@@ -104,13 +104,15 @@ export function computeSceneState(snapshot, options = {}) {
       tokens: [],
       completedOrders: [],
       waitingSummary: { capacityWaiters: [], orderWaiters: [], mutexWaiters: [] },
-      counts: { capacity: 5, occupiedSlots: 0, producers: 0, consumers: 0, preparing: 0, completed: 0 },
+      counts: { capacity: 5, occupiedSlots: 0, freeSlots: 5, producers: 0, consumers: 0, workstationCount: 0, preparing: 0, completed: 0 },
     };
   }
 
   const {
     selectedProcessId = null,
     selectedSlotIndex = null,
+    departingMap = new Map(),
+    departedIds = new Set(),
   } = options;
 
   const rawSlots = snapshot.slots ?? [];
@@ -128,11 +130,15 @@ export function computeSceneState(snapshot, options = {}) {
   const allOrders = snapshot.orders ?? [];
   const completedOrders = snapshot.completedOrders ?? [];
 
-  const producerProcesses = processes.filter((p) => p.type === 'PRODUCER');
-  const consumerProcesses = processes.filter((p) => p.type === 'CONSUMER');
+  const rawProducerProcesses = processes.filter((p) => p.type === 'PRODUCER');
+  const rawConsumerProcesses = processes.filter((p) => p.type === 'CONSUMER');
 
-  // Compute room boundaries based on actual consumer count
-  const room = computeRoomBounds(consumerProcesses.length);
+  // Filter out processes that have completely departed through the exit
+  const consumerProcesses = rawConsumerProcesses.filter((p) => !departedIds.has(p.id));
+  const producerProcesses = rawProducerProcesses.filter((p) => !departedIds.has(p.id));
+
+  // Compute room boundaries based on actual present consumer count
+  const room = computeRoomBounds(Math.max(1, consumerProcesses.length));
 
   // -------------------------------------------------------------
   // 1. SHARED 5-SLOT COUNTER AT SERVICE HATCH (Z = 0)
@@ -188,13 +194,15 @@ export function computeSceneState(snapshot, options = {}) {
   // One workstation per consumer process, stably assigned by index.
   // -------------------------------------------------------------
   const workstations = consumerProcesses.map((proc, index) => {
-    const coords = getWorkstationCoords(index, consumerProcesses.length);
+    const coords = getWorkstationCoords(index, Math.max(1, consumerProcesses.length));
     const worker = workers.find((w) => w.id === proc.id);
     const isPreparing = proc.state === 'PREPARING';
     const isWaitingOrder = fullWaiters.includes(proc.id);
     const isWaitingMutex = mutexWaiters.includes(proc.id);
     const isAccessingCounter = mutexOwner === proc.id;
     const isStopping = Boolean(proc.isStopping || proc.gracefulStopRequested);
+    const isDeparting = departingMap.has(proc.id) && !departedIds.has(proc.id);
+    const isCompleted = proc.state === 'COMPLETED' || proc.state === 'RETIRED';
 
     // Preparation progress derivation
     const orderId = worker?.assignedOrderId || proc.result?.id || proc.orderId;
@@ -204,7 +212,9 @@ export function computeSceneState(snapshot, options = {}) {
     const percent = Math.min(100, Math.round((progress / Math.max(1, duration)) * 100));
 
     let statusText = 'Waiting for an order';
-    if (isAccessingCounter) {
+    if (isDeparting || isCompleted) {
+      statusText = 'Finished · Leaving via Staff Door';
+    } else if (isAccessingCounter) {
       statusText = `Collecting from Slot [${readPos}]`;
     } else if (isWaitingMutex) {
       statusText = 'Waiting for counter access';
@@ -226,6 +236,7 @@ export function computeSceneState(snapshot, options = {}) {
       isOccupied: true,
       isPreparing,
       isStopping,
+      isDeparting,
       statusText,
       assignedProcess: {
         id: proc.id,
@@ -254,13 +265,26 @@ export function computeSceneState(snapshot, options = {}) {
     const isWaitingMutex = mutexWaiters.includes(proc.id);
     const isPreparing = proc.state === 'PREPARING';
     const isStopping = Boolean(proc.isStopping || proc.gracefulStopRequested);
+    const isDeparting = departingMap.has(proc.id) && !departedIds.has(proc.id);
+    const isCompleted = proc.state === 'COMPLETED' || proc.state === 'RETIRED';
 
     let tokenPosition;
     let rotationY = 0; // Facing south towards counter by default
     let zone;
     let stateLabel;
 
-    if (isMutex) {
+    if (isDeparting) {
+      const dep = departingMap.get(proc.id);
+      tokenPosition = dep.currentPosition;
+      rotationY = Math.PI / 2; // Facing East toward Staff Exit Door
+      zone = 'EXITING_STAFF_DOOR';
+      stateLabel = 'Finished · Leaving';
+    } else if (isCompleted) {
+      tokenPosition = [ws.position[0], 0.35, -1.5];
+      rotationY = Math.PI / 2;
+      zone = 'EXITING_STAFF_DOOR';
+      stateLabel = 'Finished · Leaving';
+    } else if (isMutex) {
       // Collecting from counter inside the kitchen at read position
       const slotX = COUNTER_SLOT_POSITIONS[readPos] ?? 0;
       tokenPosition = [slotX, 0.35, -0.9];
@@ -286,7 +310,9 @@ export function computeSceneState(snapshot, options = {}) {
       tokenPosition = [ws.position[0], 0.35, ws.position[2] - 0.45];
       rotationY = 0;
       zone = 'WORKSTATION';
-      stateLabel = isStopping ? 'Stopping after current operation' : 'Waiting for an order';
+      stateLabel = isStopping
+        ? 'Stopping after current operation'
+        : (proc.state === 'READY' ? 'Kitchen Worker Ready' : 'Waiting for an order');
     }
 
     tokens.push({
@@ -311,14 +337,27 @@ export function computeSceneState(snapshot, options = {}) {
     const isMutex = mutexOwner === proc.id;
     const isWaitingMutex = mutexWaiters.includes(proc.id);
     const isWaitingEmpty = emptyWaiters.includes(proc.id);
-    const isFinished = proc.state === 'FINISHED';
+    const isDeparting = departingMap.has(proc.id) && !departedIds.has(proc.id);
+    const isCompleted = proc.state === 'COMPLETED' || proc.state === 'RETIRED' || proc.state === 'FINISHED';
 
     let tokenPosition;
     let rotationY = Math.PI; // Facing north towards counter by default
     let zone;
     let stateLabel;
 
-    if (isMutex) {
+    if (isDeparting) {
+      const dep = departingMap.get(proc.id);
+      tokenPosition = dep.currentPosition;
+      rotationY = -Math.PI / 2; // Walking East along outside exit path
+      zone = 'EXIT_PATH_OUTSIDE';
+      stateLabel = 'Order Submitted · Leaving';
+    } else if (isCompleted) {
+      // Moving along outside exit path to the right
+      tokenPosition = [4.5 + index * 1.0, 0.35, 2.6];
+      rotationY = -Math.PI / 2; // Walking east
+      zone = 'EXIT_PATH_OUTSIDE';
+      stateLabel = 'Order Submitted · Leaving';
+    } else if (isMutex) {
       // Submitting order at the outside service hatch in front of write slot
       const slotX = COUNTER_SLOT_POSITIONS[writePos] ?? 0;
       tokenPosition = [slotX, 0.35, 0.9];
@@ -341,12 +380,6 @@ export function computeSceneState(snapshot, options = {}) {
       rotationY = Math.PI * 0.8;
       zone = 'CAPACITY_WAIT_OUTSIDE';
       stateLabel = 'Waiting for Capacity (Buffer Full)';
-    } else if (isFinished) {
-      // Moving along outside exit path to the right
-      tokenPosition = [4.5 + index * 1.0, 0.35, 2.6];
-      rotationY = -Math.PI / 2; // Walking east
-      zone = 'EXIT_PATH_OUTSIDE';
-      stateLabel = 'Order Submitted · Exiting';
     } else {
       // Approaching lineup on outside terrace
       tokenPosition = [-2.8 - index * 1.1, 0.35, 2.6];
@@ -372,11 +405,39 @@ export function computeSceneState(snapshot, options = {}) {
     });
   });
 
+  // Render any departing tokens that were removed from the authoritative snapshot processes array
+  departingMap.forEach((dep, id) => {
+    if (dep.departed || departedIds.has(id)) return;
+    if (tokens.some((t) => t.id === id)) return; // already added above
+
+    tokens.push({
+      id,
+      type: dep.type,
+      role: dep.role,
+      state: 'COMPLETED',
+      stateLabel: dep.stateLabel || (dep.type === 'PRODUCER' ? 'Order Submitted · Leaving' : 'Finished · Leaving'),
+      zone: dep.type === 'PRODUCER' ? 'EXIT_PATH_OUTSIDE' : 'EXITING_STAFF_DOOR',
+      position: dep.currentPosition,
+      rotationY: dep.type === 'PRODUCER' ? -Math.PI / 2 : Math.PI / 2,
+      isMutexOwner: false,
+      isSelected: selectedProcessId === id,
+      foodName: null,
+      orderId: null,
+      workstationId: null,
+    });
+  });
+
   // -------------------------------------------------------------
   // 5. SUMMARY COUNTS & SEMANTICS
   // -------------------------------------------------------------
   const occupiedCount = slots.filter((s) => s.isOccupied).length;
   const preparingCount = consumerProcesses.filter((p) => p.state === 'PREPARING').length;
+  const activeProducers = rawProducerProcesses.filter(
+    (p) => p.state !== 'COMPLETED' && p.state !== 'RETIRED' && !departedIds.has(p.id)
+  );
+  const activeConsumers = rawConsumerProcesses.filter(
+    (p) => p.state !== 'COMPLETED' && p.state !== 'RETIRED' && !departedIds.has(p.id)
+  );
 
   return {
     room,
@@ -394,8 +455,8 @@ export function computeSceneState(snapshot, options = {}) {
       capacity: QUEUE_CAPACITY,
       occupiedSlots: occupiedCount,
       freeSlots: Math.max(0, QUEUE_CAPACITY - occupiedCount),
-      producers: producerProcesses.length,
-      consumers: consumerProcesses.length,
+      producers: activeProducers.length,
+      consumers: activeConsumers.length,
       workstationCount: workstations.length,
       preparing: preparingCount,
       completed: completedOrders.length,

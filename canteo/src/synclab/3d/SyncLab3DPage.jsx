@@ -14,6 +14,7 @@ import {
   Sliders,
 } from 'lucide-react';
 import { computeSceneState } from './SimulationSceneAdapter.js';
+import { useProcessDepartures } from './useProcessDepartures.js';
 import { SimulationRoom } from './SimulationRoom.jsx';
 import { BufferTrays } from './BufferTrays.jsx';
 import { ConsumerWorkstations } from './ConsumerWorkstations.jsx';
@@ -81,11 +82,29 @@ export function SyncLab3DPage({
   const [resetCameraTrigger, setResetCameraTrigger] = useState(0);
   const [force2D, setForce2D] = useState(false);
 
+  // Animated visual departures controller
+  const { departuresMap, departedIds, resetDepartures, departureTick } = useProcessDepartures(
+    state,
+    isPlaying,
+    { speed }
+  );
+
   // Authoritative 3D Scene mapping
   const scene = useMemo(
-    () => computeSceneState(state, { selectedProcessId, selectedSlotIndex }),
-    [state, selectedProcessId, selectedSlotIndex]
+    () =>
+      computeSceneState(state, {
+        selectedProcessId,
+        selectedSlotIndex,
+        departingMap: departuresMap,
+        departedIds,
+      }),
+    [state, selectedProcessId, selectedSlotIndex, departuresMap, departedIds, departureTick]
   );
+
+  const handleResetWrapped = () => {
+    resetDepartures();
+    onReset();
+  };
 
   const processes = state?.processes ?? [];
   const consumerWorkstationCount = scene.workstations.length;
@@ -353,12 +372,18 @@ export function SyncLab3DPage({
         isPlaying={isPlaying}
         onTogglePlay={onTogglePlay}
         onStep={onStep}
-        onReset={onReset}
+        onReset={handleResetWrapped}
         stepCount={stepCount}
         systemStatus={systemStatus}
         speed={speed}
         onChangeSpeed={onChangeSpeed}
         onOpenProcessManager={onOpenProcessManager}
+        workloadMode={workloadMode}
+        onChangeWorkloadMode={onChangeWorkloadMode}
+        prepDuration={prepDuration}
+        onChangePrepDuration={onChangePrepDuration}
+        schedulingMode={schedulingMode}
+        onChangeSchedulingMode={onChangeSchedulingMode}
       />
 
       {/* 5. Visual Semantics Legend */}

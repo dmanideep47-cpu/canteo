@@ -116,16 +116,77 @@ export function SimulationRoom({
         </mesh>
       </group>
 
-      {/* East Wall (Kitchen Right Side) */}
-      <group position={[width / 2, wallHeight / 2, -interiorDepth / 2]}>
+      {/* East Wall (Kitchen Right Side with Dedicated Staff Exit Doorway) */}
+      {/* Front Segment of East Wall */}
+      <group position={[width / 2, wallHeight / 2, -0.9]}>
         <mesh castShadow receiveShadow>
-          <boxGeometry args={[wallThickness, wallHeight, interiorDepth]} />
+          <boxGeometry args={[wallThickness, wallHeight, 1.8]} />
           <meshStandardMaterial color={ARCH_COLORS.wallFace} roughness={0.6} />
         </mesh>
         <mesh position={[0, wallHeight / 2 + 0.02, 0]}>
-          <boxGeometry args={[wallThickness + 0.04, 0.04, interiorDepth + 0.04]} />
+          <boxGeometry args={[wallThickness + 0.04, 0.04, 1.84]} />
           <meshStandardMaterial color={ARCH_COLORS.wallTrim} roughness={0.5} />
         </mesh>
+      </group>
+
+      {/* Back Segment of East Wall */}
+      {interiorDepth > 3.2 && (
+        <group position={[width / 2, wallHeight / 2, -(3.2 + (interiorDepth - 3.2) / 2)]}>
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[wallThickness, wallHeight, interiorDepth - 3.2]} />
+            <meshStandardMaterial color={ARCH_COLORS.wallFace} roughness={0.6} />
+          </mesh>
+          <mesh position={[0, wallHeight / 2 + 0.02, 0]}>
+            <boxGeometry args={[wallThickness + 0.04, 0.04, interiorDepth - 3.2 + 0.04]} />
+            <meshStandardMaterial color={ARCH_COLORS.wallTrim} roughness={0.5} />
+          </mesh>
+        </group>
+      )}
+
+      {/* STAFF EXIT DOORWAY (Doorway Gap at Z = -2.5) */}
+      <group position={[width / 2, 0, -2.5]}>
+        {/* Door Threshold Floor Strip */}
+        <mesh position={[0, 0.005, 0]} receiveShadow>
+          <boxGeometry args={[0.3, 0.01, 1.4]} />
+          <meshStandardMaterial color="#334155" roughness={0.5} />
+        </mesh>
+
+        {/* Exterior Landing Outside Staff Door */}
+        <mesh position={[0.75, -0.01, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1.5, 1.6]} />
+          <meshStandardMaterial color="#E2E8F0" roughness={0.8} />
+        </mesh>
+
+        {/* Staff Exit Lintel Arch */}
+        <mesh position={[0, 1.35, 0]} castShadow>
+          <boxGeometry args={[wallThickness + 0.06, 0.16, 1.5]} />
+          <meshStandardMaterial color="#0F172A" roughness={0.4} />
+        </mesh>
+
+        {/* Illuminated Staff Exit Sign */}
+        <Html position={[0.1, 1.4, 0]} center distanceFactor={12} style={{ pointerEvents: 'none' }}>
+          <div
+            style={{
+              background: '#065F46',
+              color: '#ECFDF5',
+              border: '1.5px solid #10B981',
+              borderRadius: '4px',
+              padding: '2px 7px',
+              fontSize: '9.5px',
+              fontWeight: 800,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 0 8px rgba(16, 185, 129, 0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            <span>STAFF EXIT</span>
+            <span>──►</span>
+          </div>
+        </Html>
       </group>
 
       {/* Front Wall (Z = 0) with Service Hatch Opening */}

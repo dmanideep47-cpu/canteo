@@ -271,12 +271,12 @@ export function SyncLabArena({
   // Add Consumer
   const handleAddConsumer = useCallback((count = 1) => {
     setSchedulerWarning(null);
-    const res = engine.addConsumer(count);
+    const res = engine.addConsumer(count, { workloadMode, preparationDuration: prepDuration });
     refreshState();
     if (!isPlaying) {
       setSchedulerWarning(`${res.ids.join(', ')} added · Press Play or Step to run`);
     }
-  }, [engine, isPlaying, refreshState]);
+  }, [engine, workloadMode, prepDuration, isPlaying, refreshState]);
 
   // Safe Process Removal
   const handleRemoveProcess = useCallback((target) => {
@@ -646,6 +646,12 @@ export function SyncLabArena({
           stepCount={stepCount}
           currentScenario={currentScenario}
           onSelectScenario={handleSelectScenario}
+          workloadMode={workloadMode}
+          onChangeWorkloadMode={setWorkloadMode}
+          prepDuration={prepDuration}
+          onChangePrepDuration={setPrepDuration}
+          schedulingMode={schedulingMode}
+          onChangeSchedulingMode={setSchedulingMode}
         />
       </div>
 

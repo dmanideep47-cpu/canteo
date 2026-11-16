@@ -226,6 +226,10 @@ export class ProducerConsumerEngine {
             this.workers = this.workers.filter((w) => w.id !== worker.id);
             if (this.lastScheduledId === worker.id) this.lastScheduledId = null;
             this.#event(`${process.id} completed graceful retirement after finishing preparation.`, 'process-retired', process.id);
+          } else if (process.workloadMode === 'single') {
+            process.state = 'COMPLETED';
+            if (this.lastScheduledId === worker.id) this.lastScheduledId = null;
+            this.#event(`${process.id} completed assigned single workload after finishing preparation.`, 'complete', process.id, 'orderReady', { transition: { from: 'PREPARING', to: 'COMPLETED' }, orderId: order.id });
           } else {
             process.state = 'READY'; process.pc = 0; process.waitingFor = null; process.result = null;
             this.#event(`${process.id} returned to READY after finishing preparation; the workstation can accept another order.`, 'transition', process.id, 'orderReady', { transition: { from: 'PREPARING', to: 'READY' }, orderId: order.id });

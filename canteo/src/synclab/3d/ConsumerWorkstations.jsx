@@ -240,6 +240,16 @@ export function ConsumerWorkstations({
                         {percent}% Prepared
                       </div>
                     </div>
+                  ) : ws.isDeparting ? (
+                    <div
+                      style={{
+                        fontSize: '9.5px',
+                        fontWeight: 700,
+                        color: '#059669',
+                      }}
+                    >
+                      Leaving via Staff Exit ──►
+                    </div>
                   ) : isStopping ? (
                     <div
                       style={{

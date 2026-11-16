@@ -8,6 +8,7 @@ import {
   computeRoomBounds,
   getWorkstationCoords,
 } from '../src/synclab/3d/SimulationSceneAdapter.js';
+import { interpolateWaypoints } from '../src/synclab/3d/useProcessDepartures.js';
 
 describe('SimulationSceneAdapter Corrected Spatial Model Verification', () => {
   it('1. Queue capacity is strictly 5 across 0, 1, 5, 8, and 12 consumers', () => {
@@ -166,5 +167,204 @@ describe('SimulationSceneAdapter Corrected Spatial Model Verification', () => {
     assert.equal(room2.frontWallZ, 0.0);
     assert.equal(room8.frontWallZ, 0.0);
     assert.equal(room12.frontWallZ, 0.0);
+  });
+
+  it('10. Finite producer single workload completion departs via outside exit path and disappears', () => {
+    const engine = new ProducerConsumerEngine();
+    engine.addProducer(1, { workloadMode: 'single' });
+    // Run P1 through entire cycle: waitEmpty, waitMutex, insert, advanceWrite, releaseMutex, signalFull
+    for (let i = 0; i < 6; i++) {
+      engine.stepNextInstruction();
+    }
+    const snap = engine.snapshot();
+    const p1 = snap.processes.find((p) => p.id === 'P1');
+    assert.equal(p1.state, 'COMPLETED');
+
+    // Scene while departing: token along outside exit path
+    const departingMap = new Map();
+    departingMap.set('P1', {
+      id: 'P1',
+      type: 'PRODUCER',
+      role: 'Student Producer',
+      currentPosition: [7.0, 0.35, 2.6],
+      departed: false,
+    });
+    const sceneDeparting = computeSceneState(snap, { departingMap, departedIds: new Set() });
+    const p1Token = sceneDeparting.tokens.find((t) => t.id === 'P1');
+    assert.ok(p1Token, 'P1 token must be present during departure');
+    assert.equal(p1Token.zone, 'EXIT_PATH_OUTSIDE');
+    assert.equal(p1Token.stateLabel, 'Order Submitted · Leaving');
+    assert.equal(p1Token.position[0], 7.0);
+    assert.equal(sceneDeparting.counts.producers, 0, 'Active producer count decreases when completed');
+
+    // Scene after departure completes: token is completely removed
+    const departedIds = new Set(['P1']);
+    const sceneDeparted = computeSceneState(snap, { departingMap, departedIds });
+    assert.equal(sceneDeparted.tokens.find((t) => t.id === 'P1'), undefined, 'P1 token must be removed from scene');
+    assert.equal(sceneDeparted.counts.producers, 0);
+  });
+
+  it('11. Finite consumer single workload completion exits through staff door and releases workstation', () => {
+    const engine = new ProducerConsumerEngine({ persistentConsumers: true });
+    engine.addProducer(1, { workloadMode: 'single' });
+    engine.addConsumer(1, { workloadMode: 'single' });
+    // Submit order from P1
+    for (let i = 0; i < 6; i++) engine.stepNextInstruction();
+    // Consumer collects order
+    for (let i = 0; i < 6; i++) engine.stepNextInstruction();
+    // Advance kitchen ticks until preparation finishes
+    while (engine.workers.some((w) => w.state === 'PREPARING')) {
+      engine.tickKitchen();
+    }
+    const snap = engine.snapshot();
+    const c1 = snap.processes.find((p) => p.id === 'C1');
+    assert.equal(c1.state, 'COMPLETED', 'Single workload consumer must reach COMPLETED');
+
+    // While departing: walking towards Staff Exit Door
+    const departingMap = new Map();
+    departingMap.set('C1', {
+      id: 'C1',
+      type: 'CONSUMER',
+      role: 'Kitchen Worker',
+      currentPosition: [6.0, 0.35, -2.5],
+      departed: false,
+    });
+    const sceneDeparting = computeSceneState(snap, { departingMap, departedIds: new Set() });
+    const c1Token = sceneDeparting.tokens.find((t) => t.id === 'C1');
+    assert.ok(c1Token, 'C1 token must be present during departure');
+    assert.equal(c1Token.zone, 'EXITING_STAFF_DOOR');
+    assert.equal(c1Token.stateLabel, 'Finished · Leaving');
+    assert.equal(c1Token.position[0], 6.0);
+    assert.equal(sceneDeparting.workstations.length, 1, 'Workstation exists during departure');
+    assert.equal(sceneDeparting.workstations[0].isDeparting, true);
+
+    // After departure completes: token removed and workstation released
+    const departedIds = new Set(['C1']);
+    const sceneDeparted = computeSceneState(snap, { departingMap, departedIds });
+    assert.equal(sceneDeparted.tokens.find((t) => t.id === 'C1'), undefined, 'C1 token removed');
+    assert.equal(sceneDeparted.workstations.length, 0, 'Workstation released upon departure');
+    assert.equal(sceneDeparted.counts.consumers, 0);
+  });
+
+  it('12. Waiting consumers do not exit on idle; they remain at their workstation', () => {
+    const engine = new ProducerConsumerEngine();
+    engine.addConsumer(2);
+    // Consumers C1 and C2 wait for orders
+    engine.step('C1'); // waitFull -> BLOCKED
+    engine.step('C2'); // waitFull -> BLOCKED
+    const snap = engine.snapshot();
+
+    const scene = computeSceneState(snap);
+    assert.equal(scene.tokens.length, 2);
+    scene.tokens.forEach((t) => {
+      assert.equal(t.type, 'CONSUMER');
+      assert.equal(t.zone, 'WORKSTATION');
+      assert.equal(t.stateLabel, 'Waiting for an order');
+      assert.ok(t.position[2] < 0, 'Must remain inside kitchen');
+    });
+    assert.equal(scene.workstations.length, 2);
+    assert.equal(scene.counts.consumers, 2);
+  });
+
+  it('13. Continuous consumers stay inside at workstation after preparing an order', () => {
+    const engine = new ProducerConsumerEngine({ persistentConsumers: true });
+    engine.addProducer(1, { workloadMode: 'single' });
+    engine.addConsumer(1, { workloadMode: 'continuous' });
+    for (let i = 0; i < 6; i++) engine.stepNextInstruction(); // P1 submits
+    for (let i = 0; i < 6; i++) engine.stepNextInstruction(); // C1 claims
+    while (engine.workers.some((w) => w.state === 'PREPARING')) {
+      engine.tickKitchen();
+    }
+    const snap = engine.snapshot();
+    const c1 = snap.processes.find((p) => p.id === 'C1');
+    assert.equal(c1.state, 'READY', 'Continuous consumer returns to READY');
+    assert.equal(c1.completedCount, 1);
+
+    const scene = computeSceneState(snap);
+    assert.equal(scene.counts.consumers, 1, 'Continuous consumer remains active');
+    assert.equal(scene.workstations.length, 1);
+    const token = scene.tokens.find((t) => t.id === 'C1');
+    assert.equal(token.zone, 'WORKSTATION');
+    assert.equal(token.stateLabel, 'Kitchen Worker Ready');
+  });
+
+  it('14. Graceful removal: consumer preparing finishes dish then exits and releases workstation', () => {
+    const engine = new ProducerConsumerEngine({ persistentConsumers: true });
+    engine.addProducer(1, { workloadMode: 'single' });
+    engine.addConsumer(1, { workloadMode: 'continuous' });
+    for (let i = 0; i < 6; i++) engine.stepNextInstruction(); // P1 submits
+    for (let i = 0; i < 6; i++) engine.stepNextInstruction(); // C1 claims
+    assert.equal(engine.workers[0].state, 'PREPARING');
+
+    // Request graceful removal
+    const res = engine.removeProcess('C1');
+    assert.equal(res.success, true);
+    assert.equal(res.graceful, true);
+
+    // Finish preparation
+    while (engine.workers.some((w) => w.state === 'PREPARING')) {
+      engine.tickKitchen();
+    }
+    const snap = engine.snapshot();
+    assert.equal(snap.processes.some((p) => p.id === 'C1'), false, 'C1 retired and removed from processes');
+
+    // Scene with departing Map
+    const departingMap = new Map();
+    departingMap.set('C1', {
+      id: 'C1',
+      type: 'CONSUMER',
+      role: 'Kitchen Worker',
+      currentPosition: [7.5, 0.35, -2.5],
+      departed: false,
+    });
+    const sceneDeparting = computeSceneState(snap, { departingMap, departedIds: new Set() });
+    const c1Token = sceneDeparting.tokens.find((t) => t.id === 'C1');
+    assert.ok(c1Token, 'Departing token rendered even if removed from engine processes');
+    assert.equal(c1Token.zone, 'EXITING_STAFF_DOOR');
+
+    // Departure completes
+    const departedIds = new Set(['C1']);
+    const sceneDeparted = computeSceneState(snap, { departingMap, departedIds });
+    assert.equal(sceneDeparted.tokens.find((t) => t.id === 'C1'), undefined);
+    assert.equal(sceneDeparted.workstations.length, 0);
+  });
+
+  it('15. Completed orders count remains strictly authoritative throughout departures', () => {
+    const engine = new ProducerConsumerEngine({ persistentConsumers: true });
+    engine.addProducer(2, { workloadMode: 'single' });
+    engine.addConsumer(2, { workloadMode: 'single' });
+    // P1 and P2 submit
+    for (let i = 0; i < 12; i++) engine.stepNextInstruction();
+    // C1 and C2 claim
+    for (let i = 0; i < 12; i++) engine.stepNextInstruction();
+    while (engine.workers.some((w) => w.state === 'PREPARING')) {
+      engine.tickKitchen();
+    }
+    // Student picks up both ready orders
+    engine.readyOrderIds.slice().forEach((id) => engine.pickUpOrder(id));
+
+    const snap = engine.snapshot();
+    assert.equal(snap.completedOrders.length, 2);
+
+    // Compute scene before and after departures
+    const sceneBefore = computeSceneState(snap);
+    assert.equal(sceneBefore.counts.completed, 2);
+
+    const departedIds = new Set(['P1', 'P2', 'C1', 'C2']);
+    const sceneAfter = computeSceneState(snap, { departedIds });
+    assert.equal(sceneAfter.counts.completed, 2, 'Completed count unchanged by departures');
+  });
+
+  it('16. interpolateWaypoints correctly computes 3D coordinates along path', () => {
+    const waypoints = [
+      [0, 0, 0],
+      [10, 0, 0],
+      [10, 0, 10],
+    ];
+    assert.deepEqual(interpolateWaypoints(waypoints, 0), [0, 0, 0]);
+    assert.deepEqual(interpolateWaypoints(waypoints, 0.25), [5, 0, 0]);
+    assert.deepEqual(interpolateWaypoints(waypoints, 0.5), [10, 0, 0]);
+    assert.deepEqual(interpolateWaypoints(waypoints, 0.75), [10, 0, 5]);
+    assert.deepEqual(interpolateWaypoints(waypoints, 1.0), [10, 0, 10]);
   });
 });
